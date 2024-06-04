@@ -91,3 +91,20 @@ CREATE TABLE VaccinationAppointments (
     FOREIGN KEY (child_id) REFERENCES Children(id),
     FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
 );
+
+CREATE TABLE DailyVaccineUsage (
+    id SERIAL PRIMARY KEY,
+    vaccine_id INT NOT NULL,
+    date DATE NOT NULL,
+    usage_count INT DEFAULT 0,
+    FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
+);
+
+CREATE TABLE VaccineIncidents (
+    id SERIAL PRIMARY KEY,
+    vaccine_id INT NOT NULL,
+    incident_type VARCHAR(255) NOT NULL,
+    description TEXT,
+    reported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (vaccine_id) REFERENCES VaccineInventory(id)
+);

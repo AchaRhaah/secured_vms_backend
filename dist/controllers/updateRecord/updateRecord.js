@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateVaccinationRecordController = void 0;
 const db_1 = __importDefault(require("../../db"));
+const deduction_1 = require("../inventory/deduction");
 const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { childId, vaccineId, dateAdministered, batchNumber, nextAppointmentDate, administeredBy, } = req.body;
@@ -55,6 +56,10 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
                 .status(400)
                 .json({ error: "Child is not eligible for this vaccine yet." });
         }
+        const deductions = yield (0, deduction_1.deductVaccineInventoryController)(vaccineId);
+        if (deductions.error) {
+            return res.status(400).json({ error: deductions.error });
+        }
         // Check if the child has already taken the vaccine
         const checkTakenQuery = `SELECT * FROM VaccinationRecords WHERE child_id = $1 AND vaccine_id = $2 AND taken = TRUE`;
         const checkTakenResult = yield db_1.default.query(checkTakenQuery, [
@@ -81,13 +86,6 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
             childId,
             vaccineId,
         ]);
-        // Update the vaccine inventory
-        const updateInventoryQuery = `
-      UPDATE VaccineInventory
-      SET quantity = quantity - 1, daily_usage = daily_usage + 1, children_vaccinated = children_vaccinated + 1
-      WHERE vaccine_id = $1;
-    `;
-        yield db_1.default.query(updateInventoryQuery, [vaccineId]);
         res.json(updateRecordResult.rows[0]);
     }
     catch (err) {

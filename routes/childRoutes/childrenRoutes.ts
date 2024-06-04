@@ -7,6 +7,6 @@ const router = Router();
 
 router.get("/all", getAllChildrenController);
 router.get("/:childId/vaccinationRecords", getVaccinationReccordController);
-router.patch("/update-vrecord", updateVaccinationRecordController);
+router.patch("/:childId/update-vrecord", updateVaccinationRecordController);
 
 export default router;
