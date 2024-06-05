@@ -20,7 +20,7 @@ app.use(body_parser_1.default.urlencoded({ extended: true }));
 //registration Routes
 app.use("/registration", registrationRoutes_1.default);
 app.use("/children", childrenRoutes_1.default);
-app.use("/", incidentRoutes_1.default);
+app.use("/incident", incidentRoutes_1.default);
 app.use("/inventory", inventoryRoutes_1.default);
 app.listen(process.env.PORT, () => {
     console.log(`running of port ${process.env.PORT}`);

@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import db from "../../db";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import dotenv from "dotenv";
 import { PoolClient } from "pg";
 
 // Controller function to create a new vaccination staff member
+const JWT_SECRET = process.env.JWT_SECRET || "oifsod9askj934893";
 const createVaccinationStaffController = async (
   req: Request,
   res: Response
@@ -11,7 +15,15 @@ const createVaccinationStaffController = async (
 
   try {
     // Extract necessary data from the request body
-    const { name, position, hire_date, phone_number, password } = req.body;
+    const {
+      name,
+      user_type,
+      hire_date,
+      phone_number,
+      password,
+      gender,
+      address,
+    } = req.body;
 
     // Check if the vaccination staff already exists
     const staffExistQuery = `
@@ -28,6 +40,8 @@ const createVaccinationStaffController = async (
         .status(409)
         .json({ error: "Vaccination staff already exists" });
     }
+    // hash passwords
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert new user data into the Users table
     const newUserQuery = `
@@ -35,7 +49,7 @@ const createVaccinationStaffController = async (
       VALUES ($1, $2, $3, 'VaccinationStaff')
       RETURNING id
     `;
-    const newUserValues = [name, null, null]; // Assuming gender and address are nullable
+    const newUserValues = [name, gender, address]; // Assuming gender and address are nullable
     const newUserResult = await client.query(newUserQuery, newUserValues);
     const newUserId = newUserResult.rows[0].id;
 
@@ -47,15 +61,21 @@ const createVaccinationStaffController = async (
     `;
     const staffValues = [
       newUserId,
-      position,
+      user_type,
       hire_date,
       phone_number,
-      password,
+      hashedPassword,
     ];
     const { rows } = await client.query(staffQuery, staffValues);
+    // VaccinationStaff;
+    const token = jwt.sign(
+      { id: newUserId, name, userType: "VaccinationStaff" },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
     // Send success response with created vaccination staff member data
-    res.status(201).json({ success: true, data: rows[0] });
+    res.status(201).json({ success: true, data: rows[0], token });
   } catch (error) {
     // Send error response if an error occurs
     console.error("Error creating vaccination staff:", error);

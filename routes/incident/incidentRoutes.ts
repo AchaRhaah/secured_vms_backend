@@ -1,4 +1,4 @@
-import { reportVaccineIncident } from "../../controllers/incidents/sideEffect";
+import { reportVaccineIncident } from "../../controllers/incidents/incident";
 import { Router } from "express";
 
 const router = Router();

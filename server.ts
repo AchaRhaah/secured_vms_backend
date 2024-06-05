@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/registration", registrationRoute);
 app.use("/children", childrenRoutes);
-app.use("/", incidentRoutes);
+app.use("/incident", incidentRoutes);
 app.use("/inventory", inventoryRoutes);
 
 app.listen(process.env.PORT, () => {

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const sideEffect_1 = require("../../controllers/incidents/sideEffect");
+const incident_1 = require("../../controllers/incidents/incident");
 const express_1 = require("express");
 const router = (0, express_1.Router)();
-router.post("/report-incident", sideEffect_1.reportVaccineIncident);
+router.post("/report-incident", incident_1.reportVaccineIncident);
 exports.default = router;
