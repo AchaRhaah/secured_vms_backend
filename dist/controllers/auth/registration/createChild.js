@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createChildAccountController = void 0;
-const db_1 = __importDefault(require("../../db"));
+const db_1 = __importDefault(require("../../../db"));
 const crypto_1 = __importDefault(require("crypto"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -40,7 +40,6 @@ const createChildAccountController = (req, res) => __awaiter(void 0, void 0, voi
         VALUES ($1, $2, $3, 'Guardian')
         RETURNING id
       `;
-            let generatedPassword = crypto_1.default.randomBytes(8).toString("hex");
             const hashedPassword = yield bcrypt_1.default.hash(generatedPassword, 10);
             const newUserValues = [guardianName, guardianGender, guardianAddress];
             const newUserResult = yield client.query(newUserQuery, newUserValues);

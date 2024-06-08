@@ -1,7 +1,13 @@
 import { Request, Response } from "express";
 import db from "../../db";
+import jwt from "jsonwebtoken";
 import { deductVaccineInventoryController } from "../inventory/deduction";
-
+interface JwtPayload {
+  userId: number;
+  role: string;
+  name: string;
+}
+const JWT_SECRET = process.env.JWT_SECRET || "oidsj-340349jkldfg";
 export const updateVaccinationRecordController = async (
   req: Request,
   res: Response
@@ -15,6 +21,17 @@ export const updateVaccinationRecordController = async (
       nextAppointmentDate,
       administeredBy,
     } = req.body;
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res
+        .status(401)
+        .json({ error: "Authorization header is missing." });
+    }
+    const decodedToken = jwt.verify(token, JWT_SECRET) as JwtPayload & {
+      id: number;
+      role: string;
+    };
+    const { userId, name } = decodedToken;
 
     // Check if all required fields are present
     if (
@@ -95,11 +112,10 @@ export const updateVaccinationRecordController = async (
       dateAdministered,
       batchNumber,
       nextAppointmentDate,
-      administeredBy,
+      name,
       childId,
       vaccineId,
     ]);
-
     res.json(updateRecordResult.rows[0]);
   } catch (err) {
     console.error(err);

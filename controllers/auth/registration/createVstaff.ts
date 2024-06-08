@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import db from "../../db";
+import db from "../../../db";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
@@ -7,6 +7,7 @@ import { PoolClient } from "pg";
 
 // Controller function to create a new vaccination staff member
 const JWT_SECRET = process.env.JWT_SECRET || "oifsod9askj934893";
+
 const createVaccinationStaffController = async (
   req: Request,
   res: Response

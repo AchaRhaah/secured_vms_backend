@@ -1,0 +1,53 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.authMiddleware = exports.requireRole = exports.verifyToken = void 0;
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const secretKey = process.env.JWT_SECRET || "your_secret_key"; // Use an environment variable for the secret key
+const verifyToken = (req, res, next) => {
+    var _a;
+    const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({ error: "Access denied, no token provided" });
+    }
+    try {
+        const decoded = jsonwebtoken_1.default.verify(token, secretKey);
+        req.user = decoded;
+        next();
+    }
+    catch (error) {
+        res.status(401).json({ error: "Invalid token" });
+    }
+};
+exports.verifyToken = verifyToken;
+const requireRole = (role) => {
+    return (req, res, next) => {
+        var _a;
+        if (((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) !== role) {
+            return res
+                .status(403)
+                .json({ error: "Access denied, insufficient permissions" });
+        }
+        next();
+    };
+};
+exports.requireRole = requireRole;
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ error: "Authorization header missing" });
+    }
+    const token = authHeader.split(" ")[1];
+    try {
+        const decoded = jsonwebtoken_1.default.verify(token, secretKey);
+        // console.log("here", decoded.guardianId);
+        req.user = decoded;
+        next();
+    }
+    catch (err) {
+        return res.status(401).json({ error: "Invalid token" });
+    }
+};
+exports.authMiddleware = authMiddleware;

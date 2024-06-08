@@ -14,10 +14,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateVaccinationRecordController = void 0;
 const db_1 = __importDefault(require("../../db"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const deduction_1 = require("../inventory/deduction");
+const JWT_SECRET = process.env.JWT_SECRET || "oidsj-340349jkldfg";
 const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         const { childId, vaccineId, dateAdministered, batchNumber, nextAppointmentDate, administeredBy, } = req.body;
+        const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+        if (!token) {
+            return res
+                .status(401)
+                .json({ error: "Authorization header is missing." });
+        }
+        const decodedToken = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+        const { userId, name } = decodedToken;
         // Check if all required fields are present
         if (!childId ||
             !vaccineId ||
@@ -82,7 +93,7 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
             dateAdministered,
             batchNumber,
             nextAppointmentDate,
-            administeredBy,
+            name,
             childId,
             vaccineId,
         ]);
