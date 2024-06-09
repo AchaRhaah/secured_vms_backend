@@ -23,7 +23,7 @@ app.use((0, cors_1.default)());
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 //registration Routes
-app.use("/registration", auth_1.verifyToken, registrationRoutes_1.default);
+app.use("/registration", auth_1.verifyToken, checkTokenBlackList_1.checkTokenBlacklist, registrationRoutes_1.default);
 app.use("/children", auth_1.verifyToken, checkTokenBlackList_1.checkTokenBlacklist, (0, auth_1.requireRole)(["VaccinationStaff", "departmentManager"]), childrenRoutes_1.default);
 app.use("/incident", incidentRoutes_1.default);
 app.use("/inventory", inventoryRoutes_1.default);

@@ -11,32 +11,44 @@ interface JwtPayload {
   name: string;
 }
 
-export const loginVaccinationStaffController = async (
-  req: Request,
-  res: Response
-) => {
+export const loginController = async (req: Request, res: Response) => {
   const { username, password, user_type } = req.body;
   const token = req.headers.authorization?.split(" ")[1];
 
   try {
-    // Fetch staff data from the database
-    const staffQuery = `
-      SELECT Users.id, Users.name, Users.user_type, VaccinationStaff.password
-      FROM Users
-      INNER JOIN VaccinationStaff ON Users.id = VaccinationStaff.user_id
-      WHERE Users.name = $1 AND Users.user_type = $2
-    `;
-    const staffResult = await db.query(staffQuery, [username, user_type]);
+    let userQuery: string;
+    let userResult: any;
 
-    if (staffResult.rows.length === 0) {
+    if (user_type === "Guardian") {
+      // Fetch Guardian data from the database
+      userQuery = `
+        SELECT Users.id, Users.name, Users.user_type, Guardians.password, Guardians.id
+        FROM Users
+        INNER JOIN Guardians ON Users.id = Guardians.user_id
+        WHERE Users.name = $1 AND Users.user_type = 'Guardian'
+      `;
+      userResult = await db.query(userQuery, [username]);
+    } else if (user_type === "VaccinationStaff" || "departmentManager") {
+      // Fetch Vaccination Staff data from the database
+      userQuery = `
+        SELECT Users.id, Users.name, Users.user_type, VaccinationStaff.password
+        FROM Users
+        INNER JOIN VaccinationStaff ON Users.id = VaccinationStaff.user_id
+        WHERE Users.name = $1 AND Users.user_type = $2
+      `;
+      userResult = await db.query(userQuery, [username, user_type]);
+    } else {
+      return res.status(400).json({ error: "Invalid user type" });
+    }
+
+    if (userResult.rows.length === 0) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const staff = staffResult.rows[0];
+    const user = userResult.rows[0];
 
     // Compare the password with the stored hashed password
-    const isPasswordValid = await bcrypt.compare(password, staff.password);
-
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
@@ -46,24 +58,24 @@ export const loginVaccinationStaffController = async (
       const decodedToken = jwt.verify(token, secretKey) as JwtPayload;
       if (
         decodedToken &&
-        decodedToken.name === staff.name &&
-        decodedToken.userId === staff.id &&
-        decodedToken.role === staff.user_type
+        decodedToken.name === user.name &&
+        decodedToken.userId === user.id &&
+        decodedToken.role === user.user_type
       ) {
         return res.json({ token });
       }
     }
 
-    // Generate a new JWT with the staff's role
+    // Generate a new JWT with the user's role
     const newToken = jwt.sign(
-      { userId: staff.id, role: staff.user_type, name: staff.name },
+      { userId: user.id, role: user.user_type, name: user.name },
       secretKey,
       { expiresIn: "24h" }
     );
 
     res.json({ token: newToken });
   } catch (error) {
-    console.error("Error logging in***************:", error);
+    console.error("Error logging in:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

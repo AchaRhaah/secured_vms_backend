@@ -26,7 +26,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 //registration Routes
 
-app.use("/registration", verifyToken, registrationRoute);
+app.use("/registration", verifyToken, checkTokenBlacklist, registrationRoute);
 app.use(
   "/children",
   verifyToken,

@@ -1,10 +1,8 @@
 import { Router } from "express";
-import { loginVaccinationStaffController } from "../../controllers/auth/login/staffLogin";
-import { loginGuardianController } from "../../controllers/auth/login/guardianLogin";
+import { loginController } from "../../controllers/auth/login/staffLogin";
 
 const router = Router();
 
-router.post("/login-staff", loginVaccinationStaffController);
-router.post("/login-guardian", loginGuardianController);
+router.post("/login-staff", loginController);
 
 export default router;

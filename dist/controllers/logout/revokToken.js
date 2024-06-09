@@ -24,21 +24,15 @@ const revokeTokenController = (req, res, next) => __awaiter(void 0, void 0, void
     }
     try {
         const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
-        // Check if the token is already in the blacklist
-        const checkQuery = `SELECT token FROM TokenBlacklist WHERE token = $1`;
-        const checkResult = yield db_1.default.query(checkQuery, [token]);
-        if (checkResult.rows.length > 0) {
-            return res.status(400).json({ error: "Token is already blacklisted." });
-        }
         // Add token to blacklist with its expiration time
         const expiryDate = new Date(decoded.exp * 1000); // Convert exp from seconds to milliseconds
-        const insertQuery = `INSERT INTO TokenBlacklist (token, expiry) VALUES ($1, $2)`;
-        yield db_1.default.query(insertQuery, [token, expiryDate]);
-        return res.json({ message: "Token has been revoked." });
+        const query = `INSERT INTO TokenBlacklist (token, expiry) VALUES ($1, $2)`;
+        yield db_1.default.query(query, [token, expiryDate]);
+        next();
     }
     catch (error) {
         console.error("Token verification error:", error);
-        return res.status(401).json({ error: "Invalid token." });
+        res.status(401).json({ error: "Invalid token." });
     }
 });
 exports.revokeTokenController = revokeTokenController;
