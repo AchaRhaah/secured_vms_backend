@@ -24,8 +24,9 @@ const verifyToken = (req, res, next) => {
 exports.verifyToken = verifyToken;
 const requireRole = (roles) => {
     return (req, res, next) => {
-        var _a;
-        if (!((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) || !roles.includes(req.user.role)) {
+        var _a, _b;
+        console.log((_a = req.user) === null || _a === void 0 ? void 0 : _a.role);
+        if (!((_b = req.user) === null || _b === void 0 ? void 0 : _b.role) || !roles.includes(req.user.role)) {
             return res
                 .status(403)
                 .json({ error: "Access denied, insufficient permissions" });

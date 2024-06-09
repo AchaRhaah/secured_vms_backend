@@ -9,6 +9,8 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import logoutRoutes from "./routes/auth/logoutRoutes";
+import { requireRole, verifyToken } from "./middleware/auth/auth";
+import { checkTokenBlacklist } from "./middleware/auth/checkTokenBlackList";
 dotenv.config();
 
 const app: Express = express();
@@ -21,7 +23,13 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //registration Routes
 
 app.use("/registration", registrationRoute);
-app.use("/children", childrenRoutes);
+app.use(
+  "/children",
+  verifyToken,
+  checkTokenBlacklist,
+  requireRole(["VaccinationStaff", "departmentManager"]),
+  childrenRoutes
+);
 app.use("/incident", incidentRoutes);
 app.use("/inventory", inventoryRoutes);
 app.use("/child-records", childRecordRoutes);

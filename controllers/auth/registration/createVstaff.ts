@@ -28,9 +28,9 @@ const createVaccinationStaffController = async (
 
     // Check if the vaccination staff already exists
     const staffExistQuery = `
-      SELECT * FROM Users WHERE name = $1 AND user_type = 'VaccinationStaff'
+      SELECT * FROM Users WHERE name = $1 AND user_type = $2
     `;
-    const staffExistValues = [name];
+    const staffExistValues = [name, user_type];
     const staffExistResult = await client.query(
       staffExistQuery,
       staffExistValues
@@ -47,10 +47,10 @@ const createVaccinationStaffController = async (
     // Insert new user data into the Users table
     const newUserQuery = `
       INSERT INTO Users (name, gender, address, user_type)
-      VALUES ($1, $2, $3, 'VaccinationStaff')
+      VALUES ($1, $2, $3, $4)
       RETURNING id
     `;
-    const newUserValues = [name, gender, address]; // Assuming gender and address are nullable
+    const newUserValues = [name, gender, address, user_type]; // Assuming gender and address are nullable
     const newUserResult = await client.query(newUserQuery, newUserValues);
     const newUserId = newUserResult.rows[0].id;
 
@@ -70,13 +70,13 @@ const createVaccinationStaffController = async (
     const { rows } = await client.query(staffQuery, staffValues);
     // VaccinationStaff;
     const token = jwt.sign(
-      { id: newUserId, name, userType: "VaccinationStaff" },
+      { userId: newUserId, name, role: user_type },
       JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "9h" }
     );
 
     // Send success response with created vaccination staff member data
-    res.status(201).json({ success: true, data: rows[0], token });
+    res.status(201).json({ success: true, data: rows[0], token, user_type });
   } catch (error) {
     // Send error response if an error occurs
     console.error("Error creating vaccination staff:", error);

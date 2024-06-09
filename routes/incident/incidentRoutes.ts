@@ -1,7 +1,7 @@
 import { reportVaccineIncident } from "../../controllers/incidents/incident";
 import { Router } from "express";
 import { requireRole, verifyToken } from "../../middleware/auth/auth";
-import { checkTokenBlacklist } from "../../controllers/logout/checkTokenBlackList";
+import { checkTokenBlacklist } from "../../middleware/auth/checkTokenBlackList";
 
 const router = Router();
 

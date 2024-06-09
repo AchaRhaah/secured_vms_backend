@@ -1,15 +1,10 @@
 import { forceExpireTokenController } from "../../controllers/logout/logout";
-import { checkTokenBlacklist } from "../../controllers/logout/checkTokenBlackList";
-import { revokeTokenController } from "../../controllers/logout/revokToken";
+import { checkTokenBlacklist } from "../../middleware/auth/checkTokenBlackList";
+import { revokeTokenController } from "../../middleware/auth/revokToken";
 import { Router } from "express";
 
 const router = Router();
 
-router.get(
-  "/logout",
-  //   checkTokenBlacklist,
-  revokeTokenController,
-  forceExpireTokenController
-);
+router.get("/logout", revokeTokenController, forceExpireTokenController);
 
 export default router;

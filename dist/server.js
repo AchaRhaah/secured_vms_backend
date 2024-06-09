@@ -14,6 +14,8 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const logoutRoutes_1 = __importDefault(require("./routes/auth/logoutRoutes"));
+const auth_1 = require("./middleware/auth/auth");
+const checkTokenBlackList_1 = require("./middleware/auth/checkTokenBlackList");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 // middleware
@@ -22,7 +24,7 @@ app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 //registration Routes
 app.use("/registration", registrationRoutes_1.default);
-app.use("/children", childrenRoutes_1.default);
+app.use("/children", auth_1.verifyToken, checkTokenBlackList_1.checkTokenBlacklist, (0, auth_1.requireRole)(["VaccinationStaff", "departmentManager"]), childrenRoutes_1.default);
 app.use("/incident", incidentRoutes_1.default);
 app.use("/inventory", inventoryRoutes_1.default);
 app.use("/child-records", childRecordRoutes_1.default);
