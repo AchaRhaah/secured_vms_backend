@@ -3,7 +3,7 @@ import db from "../../db";
 import { JwtPayload } from "../../middleware/auth/auth";
 // Get all children under the logged-in guardian
 export const getChildrenUnderGuardian = async (req: Request, res: Response) => {
-  const { userId, guardianId } = req.user as JwtPayload;
+  const { userId, guardianId } = req.userR as JwtPayload;
   console.log("here:", guardianId);
 
   try {
@@ -25,7 +25,7 @@ export const getChildVaccinationRecords = async (
   req: Request,
   res: Response
 ) => {
-  const { guardianId } = req.user as JwtPayload;
+  const { guardianId } = req.userR as JwtPayload;
   const { childId } = req.params;
 
   try {

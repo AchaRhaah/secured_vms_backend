@@ -19,21 +19,18 @@ const db_1 = __importDefault(require("../../../db"));
 const secretKey = process.env.JWT_SECRET || "LAJDLD9348jkdf924+"; // Use an environment variable for the secret key
 const loginVaccinationStaffController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const { username, password } = req.body;
+    const { username, password, user_type } = req.body;
     const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
-    if (token) {
-        // Token exists, send back the same token without regeneration
-        return res.json({ token });
-    }
     try {
         // Fetch staff data from the database
         const staffQuery = `
       SELECT Users.id, Users.name, Users.user_type, VaccinationStaff.password
       FROM Users
       INNER JOIN VaccinationStaff ON Users.id = VaccinationStaff.user_id
-      WHERE Users.name = $1 AND Users.user_type = 'VaccinationStaff'
+      WHERE Users.name = $1 AND Users.user_type = $2
     `;
-        const staffResult = yield db_1.default.query(staffQuery, [username]);
+        const staffResult = yield db_1.default.query(staffQuery, [username, user_type]);
+        console.log();
         if (staffResult.rows.length === 0) {
             return res.status(401).json({ error: "Invalid credentials" });
         }
@@ -43,12 +40,22 @@ const loginVaccinationStaffController = (req, res) => __awaiter(void 0, void 0, 
         if (!isPasswordValid) {
             return res.status(401).json({ error: "Invalid credentials" });
         }
-        // Generate a JWT with the staff's role
-        const token = jsonwebtoken_1.default.sign({ userId: staff.id, role: staff.user_type }, secretKey, { expiresIn: "24h" });
-        res.json({ token });
+        // If a token exists in the request headers and the payload matches the fetched user data, return the same token
+        if (token) {
+            const decodedToken = jsonwebtoken_1.default.verify(token, secretKey);
+            if (decodedToken &&
+                decodedToken.name === staff.name &&
+                decodedToken.userId === staff.id &&
+                decodedToken.role === staff.user_type) {
+                return res.json({ token });
+            }
+        }
+        // Generate a new JWT with the staff's role
+        const newToken = jsonwebtoken_1.default.sign({ userId: staff.id, role: staff.user_type, name: staff.name }, secretKey, { expiresIn: "24h" });
+        res.json({ token: newToken });
     }
     catch (error) {
-        console.error("Error logging in:", error);
+        console.error("Error logging in***************:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 });

@@ -7,7 +7,7 @@ const router = Router();
 router.post(
   "/restock",
   verifyToken,
-  requireRole("VaccinationStaff"),
+  requireRole(["VaccinationStaff", "departmentManager"]),
   restockVaccineController
 );
 export default router;

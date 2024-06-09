@@ -1,5 +1,4 @@
-CREATE DATABASE vaccinationManagementSystem;
-CREATE TYPE USER_TYPE AS ENUM('WardManager', 'VaccinationStaff', 'Guardian');
+CREATE TYPE USER_TYPE AS ENUM('departmentManager', 'VaccinationStaff', 'Guardian');
 
 CREATE TYPE GENDER_TYPE AS ENUM('Male', 'Female');
 

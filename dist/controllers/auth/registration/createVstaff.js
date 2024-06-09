@@ -12,8 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const db_1 = __importDefault(require("../../../db"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const db_1 = __importDefault(require("../../../db"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 // Controller function to create a new vaccination staff member
 const JWT_SECRET = process.env.JWT_SECRET || "oifsod9askj934893";

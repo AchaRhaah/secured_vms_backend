@@ -16,7 +16,7 @@ exports.getChildVaccinationRecords = exports.getChildrenUnderGuardian = void 0;
 const db_1 = __importDefault(require("../../db"));
 // Get all children under the logged-in guardian
 const getChildrenUnderGuardian = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userId, guardianId } = req.user;
+    const { userId, guardianId } = req.userR;
     console.log("here:", guardianId);
     try {
         const childrenQuery = `
@@ -35,7 +35,7 @@ const getChildrenUnderGuardian = (req, res) => __awaiter(void 0, void 0, void 0,
 exports.getChildrenUnderGuardian = getChildrenUnderGuardian;
 // Get vaccination records for a specific child under the logged-in guardian
 const getChildVaccinationRecords = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { guardianId } = req.user;
+    const { guardianId } = req.userR;
     const { childId } = req.params;
     try {
         const guardianCheckQuery = `

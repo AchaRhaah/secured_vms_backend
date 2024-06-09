@@ -9,19 +9,19 @@ const router = Router();
 router.get(
   "/all",
   verifyToken,
-  requireRole("VaccinationStaff"),
+  requireRole(["VaccinationStaff", "departmentManager"]),
   getAllChildrenController
 );
 router.get(
   "/:childId/vaccinationRecords",
   verifyToken,
-  requireRole("VaccinationStaff"),
+  requireRole(["VaccinationStaff", "departmentManager"]),
   getVaccinationReccordController
 );
 router.patch(
   "/:childId/update-vrecord",
   verifyToken,
-  requireRole("VaccinationStaff"),
+  requireRole(["VaccinationStaff", "departmentManager"]),
   updateVaccinationRecordController
 );
 

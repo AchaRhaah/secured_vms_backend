@@ -8,9 +8,15 @@ const router = Router();
 router.post(
   "/create-child",
   verifyToken,
-  requireRole("VaccinationStaff"),
+  requireRole(["VaccinationStaff", "departmentManager"]),
   createChildAccountController
 );
-router.post("/create-vstaff", createVaccinationStaffController);
+router.post(
+  "/create-vstaff",
+  verifyToken,
+  requireRole(["departmentManager"]),
+  createVaccinationStaffController
+);
 
 export default router;
+// ;departmentManager

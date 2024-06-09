@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import db from "../../../db";
 import jwt from "jsonwebtoken";
+import db from "../../../db";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { PoolClient } from "pg";

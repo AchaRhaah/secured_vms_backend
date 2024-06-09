@@ -26,7 +26,7 @@ const loginGuardianController = (req, res) => __awaiter(void 0, void 0, void 0, 
         return res.json({ token });
     }
     try {
-        // Fetch staff data from the database
+        // Fetch Guardian data from the database
         const guardianQuery = `
       SELECT Users.id, Users.name, Users.user_type, Guardians.password, Guardians.id
       FROM Users

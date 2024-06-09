@@ -124,3 +124,90 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+
+-- Trigger: populate_vaccination_appointments_trigger
+
+CREATE TRIGGER populate_vaccination_appointments_trigger
+AFTER INSERT ON Children
+FOR EACH ROW
+EXECUTE FUNCTION populate_vaccination_appointments();
+
+
+CREATE OR REPLACE FUNCTION create_vaccine_inventory()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO VaccineInventory (vaccine_id, quantity, vvm, daily_usage, restock, children_vaccinated)
+  VALUES (NEW.id, 0, '', 0, 0, 0);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER after_vaccine_insert
+AFTER INSERT ON Vaccines
+FOR EACH ROW
+EXECUTE FUNCTION create_vaccine_inventory();
+
+
+
+
+
+-- This trigger function ensures that every time a new record is inserted into the VaccinationRecords table, the corresponding inventory counts in the VaccineInventory table are updated accordingly.
+-- -- Trigger function: update_vaccine_inventory
+
+CREATE OR REPLACE FUNCTION update_vaccine_inventory()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Decrement the quantity in VaccineInventory by 1 for the used vaccine
+    UPDATE VaccineInventory
+    SET quantity = quantity - 1,
+        daily_usage = daily_usage + 1,
+        children_vaccinated = children_vaccinated + 1
+    WHERE vaccine_id = NEW.vaccine_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger: update_vaccine_inventory_trigger
+
+CREATE TRIGGER update_vaccine_inventory_trigger
+AFTER INSERT ON VaccinationRecords
+FOR EACH ROW
+EXECUTE FUNCTION update_vaccine_inventory();
+
+
+
+-- booster dose eligibility
+CREATE OR REPLACE FUNCTION check_booster_eligibility()
+RETURNS TRIGGER AS $$
+DECLARE
+    regular_dose_count INT;
+BEGIN
+    -- Check if the new record is marked as a booster
+    IF NEW.is_booster THEN
+        -- Count the number of regular doses taken by the child for the same vaccine
+        SELECT COUNT(*) INTO regular_dose_count
+        FROM VaccinationRecords
+        WHERE child_id = NEW.child_id
+        AND vaccine_id = NEW.vaccine_id
+        AND is_booster = FALSE
+        AND taken = TRUE;
+
+        -- If no regular dose has been taken, raise an exception
+        IF regular_dose_count = 0 THEN
+            RAISE EXCEPTION 'Child must have taken the regular dose before receiving a booster';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER check_booster_eligibility_trigger
+BEFORE INSERT ON VaccinationRecords
+FOR EACH ROW
+EXECUTE FUNCTION check_booster_eligibility();
+

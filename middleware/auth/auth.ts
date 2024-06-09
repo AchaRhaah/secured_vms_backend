@@ -1,10 +1,22 @@
-import { Request, Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+const secretKey = process.env.JWT_SECRET || "your_secret_key";
 
-const secretKey = process.env.JWT_SECRET || "your_secret_key"; // Use an environment variable for the secret key
 declare module "express-serve-static-core" {
   interface Request {
-    user?: JwtPayload & { id: number; role: string };
+    user?: {
+      id: number;
+      name: string;
+      role: string;
+      iat: number;
+      exp: number;
+    };
+  }
+}
+
+declare module "express-serve-static-core" {
+  interface Request {
+    userR?: JwtPayload & { id: number; role: string };
   }
 }
 export interface JwtPayload {
@@ -25,9 +37,12 @@ export const verifyToken = (
   }
 
   try {
-    const decoded = jwt.verify(token, secretKey) as JwtPayload & {
+    const decoded = jwt.verify(token, secretKey) as {
       id: number;
+      name: string;
       role: string;
+      iat: number;
+      exp: number;
     };
     req.user = decoded;
     next();
@@ -36,13 +51,15 @@ export const verifyToken = (
   }
 };
 
-export const requireRole = (role: string) => {
+export const requireRole = (roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (req.user?.role !== role) {
+    console.log(req.user);
+    if (!req.user?.role || !roles.includes(req.user.role)) {
       return res
         .status(403)
         .json({ error: "Access denied, insufficient permissions" });
     }
+
     next();
   };
 };
@@ -64,9 +81,7 @@ export const authMiddleware = (
       id: number;
       role: string;
     };
-    // console.log("here", decoded.guardianId);
-
-    req.user = decoded;
+    req.userR = decoded;
 
     next();
   } catch (err) {

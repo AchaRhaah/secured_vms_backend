@@ -7,7 +7,7 @@ const router = Router();
 router.post(
   "/report-incident",
   verifyToken,
-  requireRole("VaccinationStaff"),
+  requireRole(["VaccinationStaff", "departmentManager"]),
   reportVaccineIncident
 );
 
