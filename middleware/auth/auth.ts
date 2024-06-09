@@ -53,7 +53,6 @@ export const verifyToken = (
 
 export const requireRole = (roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.user?.role);
     if (!req.user?.role || !roles.includes(req.user.role)) {
       return res
         .status(403)

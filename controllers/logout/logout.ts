@@ -11,8 +11,6 @@ interface JwtPayload {
 
 export const forceExpireTokenController = (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(" ")[1];
-  console.log(token);
-
   if (!token) {
     return res.status(401).json({ error: "Authorization header is missing." });
   }

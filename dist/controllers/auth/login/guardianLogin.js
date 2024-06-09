@@ -34,7 +34,6 @@ const loginGuardianController = (req, res) => __awaiter(void 0, void 0, void 0, 
       WHERE Users.name = $1 AND Users.user_type = 'Guardian'
     `;
         const guardianResults = yield db_1.default.query(guardianQuery, [username]);
-        // console.log(guardianResults.rows[0]);
         if (guardianResults.rows.length === 0) {
             return res.status(401).json({ error: "Invalid credentials" });
         }
@@ -42,7 +41,6 @@ const loginGuardianController = (req, res) => __awaiter(void 0, void 0, void 0, 
         // Compare the password with the stored hashed password
         const isPasswordValid = yield bcrypt_1.default.compare(password, guardian.password);
         if (!isPasswordValid) {
-            console.log("***********here");
             return res.status(401).json({ error: "Invalid credentials" });
         }
         // Generate a JWT with the staff's role

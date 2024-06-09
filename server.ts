@@ -9,7 +9,11 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import logoutRoutes from "./routes/auth/logoutRoutes";
-import { requireRole, verifyToken } from "./middleware/auth/auth";
+import {
+  authMiddleware,
+  requireRole,
+  verifyToken,
+} from "./middleware/auth/auth";
 import { checkTokenBlacklist } from "./middleware/auth/checkTokenBlackList";
 dotenv.config();
 
@@ -22,7 +26,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 //registration Routes
 
-app.use("/registration", registrationRoute);
+app.use("/registration", verifyToken, registrationRoute);
 app.use(
   "/children",
   verifyToken,
@@ -32,7 +36,7 @@ app.use(
 );
 app.use("/incident", incidentRoutes);
 app.use("/inventory", inventoryRoutes);
-app.use("/child-records", childRecordRoutes);
+app.use("/child-records", authMiddleware, childRecordRoutes);
 app.use("/auth", loginRoutes);
 app.use("/auth", logoutRoutes);
 

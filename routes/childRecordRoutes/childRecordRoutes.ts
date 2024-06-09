@@ -6,11 +6,7 @@ import {
 import { authMiddleware } from "../../middleware/auth/auth";
 
 const router = Router();
-router.get("/children", authMiddleware, getChildrenUnderGuardian);
-router.get(
-  "/children/:childId/vaccinations",
-  authMiddleware,
-  getChildVaccinationRecords
-);
+router.get("/children", getChildrenUnderGuardian);
+router.get("/children/:childId/vaccinations", getChildVaccinationRecords);
 
 export default router;

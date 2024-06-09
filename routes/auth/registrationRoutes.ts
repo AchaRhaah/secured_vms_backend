@@ -7,13 +7,11 @@ const router = Router();
 
 router.post(
   "/create-child",
-  verifyToken,
   requireRole(["VaccinationStaff", "departmentManager"]),
   createChildAccountController
 );
 router.post(
   "/create-vstaff",
-  verifyToken,
   requireRole(["departmentManager"]),
   createVaccinationStaffController
 );

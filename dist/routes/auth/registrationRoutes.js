@@ -8,7 +8,7 @@ const createChild_1 = require("../../controllers/auth/registration/createChild")
 const auth_1 = require("../../middleware/auth/auth");
 const createVstaff_1 = __importDefault(require("../../controllers/auth/registration/createVstaff"));
 const router = (0, express_1.Router)();
-router.post("/create-child", auth_1.verifyToken, (0, auth_1.requireRole)(["VaccinationStaff", "departmentManager"]), createChild_1.createChildAccountController);
-router.post("/create-vstaff", auth_1.verifyToken, (0, auth_1.requireRole)(["departmentManager"]), createVstaff_1.default);
+router.post("/create-child", (0, auth_1.requireRole)(["VaccinationStaff", "departmentManager"]), createChild_1.createChildAccountController);
+router.post("/create-vstaff", (0, auth_1.requireRole)(["departmentManager"]), createVstaff_1.default);
 exports.default = router;
 // ;departmentManager

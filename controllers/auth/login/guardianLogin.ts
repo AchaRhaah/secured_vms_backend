@@ -27,7 +27,6 @@ export const loginGuardianController = async (req: Request, res: Response) => {
       WHERE Users.name = $1 AND Users.user_type = 'Guardian'
     `;
     const guardianResults = await db.query(guardianQuery, [username]);
-    // console.log(guardianResults.rows[0]);
     if (guardianResults.rows.length === 0) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
@@ -36,8 +35,6 @@ export const loginGuardianController = async (req: Request, res: Response) => {
     // Compare the password with the stored hashed password
     const isPasswordValid = await bcrypt.compare(password, guardian.password);
     if (!isPasswordValid) {
-      console.log("***********here");
-
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
