@@ -20,7 +20,8 @@ const JWT_SECRET = process.env.JWT_SECRET || "oidsj-340349jkldfg";
 const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        const { childId, vaccineId, dateAdministered, batchNumber, nextAppointmentDate, administeredBy, } = req.body;
+        const { childId, vaccineId, dateAdministered, batchNumber, nextAppointmentDate, administeredBy, isBooster = false, // New field for booster
+         } = req.body;
         const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
         if (!token) {
             return res
@@ -77,26 +78,36 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
             childId,
             vaccineId,
         ]);
-        if (checkTakenResult.rows.length > 0) {
-            return res.status(400).json({
-                error: "This vaccine has already been administered to the child.",
-            });
+        if (isBooster) {
+            // Ensure the child has already taken the initial dose before allowing a booster
+            if (checkTakenResult.rows.length === 0) {
+                return res.status(400).json({
+                    error: "The child must have taken the initial dose before receiving a booster.",
+                });
+            }
+        }
+        else {
+            if (checkTakenResult.rows.length > 0) {
+                return res.status(400).json({
+                    error: "This vaccine has already been administered to the child.",
+                });
+            }
         }
         // Update the vaccination record
         const updateRecordQuery = `
-      UPDATE VaccinationRecords 
-      SET date_administered = $1, batch_number = $2, next_appointment_date = $3, administered_by = $4, taken = TRUE 
-      WHERE child_id = $5 AND vaccine_id = $6 
+      INSERT INTO VaccinationRecords 
+      (child_id, vaccine_id, date_administered, batch_number, next_appointment_date, administered_by, taken, eligible, is_booster) 
+      VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE, $7)
       RETURNING *;
     `;
-        console.log("done");
         const updateRecordResult = yield db_1.default.query(updateRecordQuery, [
+            childId,
+            vaccineId,
             dateAdministered,
             batchNumber,
             nextAppointmentDate,
-            userId,
-            childId,
-            vaccineId,
+            administeredBy,
+            isBooster,
         ]);
         res.json(updateRecordResult.rows[0]);
     }

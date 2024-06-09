@@ -2,12 +2,15 @@ import { Request, Response } from "express";
 import db from "../../db";
 import jwt from "jsonwebtoken";
 import { deductVaccineInventoryController } from "../inventory/deduction";
+
 interface JwtPayload {
   userId: number;
   role: string;
   name: string;
 }
+
 const JWT_SECRET = process.env.JWT_SECRET || "oidsj-340349jkldfg";
+
 export const updateVaccinationRecordController = async (
   req: Request,
   res: Response
@@ -20,13 +23,16 @@ export const updateVaccinationRecordController = async (
       batchNumber,
       nextAppointmentDate,
       administeredBy,
+      isBooster = false, // New field for booster
     } = req.body;
+
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
       return res
         .status(401)
         .json({ error: "Authorization header is missing." });
     }
+
     const decodedToken = jwt.verify(token, JWT_SECRET) as JwtPayload & {
       id: number;
       role: string;
@@ -84,10 +90,12 @@ export const updateVaccinationRecordController = async (
         .status(400)
         .json({ error: "Child is not eligible for this vaccine yet." });
     }
+
     const deductions = await deductVaccineInventoryController(vaccineId);
     if (deductions.error) {
       return res.status(400).json({ error: deductions.error });
     }
+
     // Check if the child has already taken the vaccine
     const checkTakenQuery = `SELECT * FROM VaccinationRecords WHERE child_id = $1 AND vaccine_id = $2 AND taken = TRUE`;
     const checkTakenResult = await db.query(checkTakenQuery, [
@@ -95,28 +103,39 @@ export const updateVaccinationRecordController = async (
       vaccineId,
     ]);
 
-    if (checkTakenResult.rows.length > 0) {
-      return res.status(400).json({
-        error: "This vaccine has already been administered to the child.",
-      });
+    if (isBooster) {
+      // Ensure the child has already taken the initial dose before allowing a booster
+      if (checkTakenResult.rows.length === 0) {
+        return res.status(400).json({
+          error:
+            "The child must have taken the initial dose before receiving a booster.",
+        });
+      }
+    } else {
+      if (checkTakenResult.rows.length > 0) {
+        return res.status(400).json({
+          error: "This vaccine has already been administered to the child.",
+        });
+      }
     }
 
     // Update the vaccination record
     const updateRecordQuery = `
-      UPDATE VaccinationRecords 
-      SET date_administered = $1, batch_number = $2, next_appointment_date = $3, administered_by = $4, taken = TRUE 
-      WHERE child_id = $5 AND vaccine_id = $6 
+      INSERT INTO VaccinationRecords 
+      (child_id, vaccine_id, date_administered, batch_number, next_appointment_date, administered_by, taken, eligible, is_booster) 
+      VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE, $7)
       RETURNING *;
     `;
-      console.log("done");
-      const updateRecordResult = await db.query(updateRecordQuery, [
-        dateAdministered,
-        batchNumber,
-        nextAppointmentDate,
-        userId,
-        childId,
-        vaccineId,
-      ]);
+    const updateRecordResult = await db.query(updateRecordQuery, [
+      childId,
+      vaccineId,
+      dateAdministered,
+      batchNumber,
+      nextAppointmentDate,
+      administeredBy,
+      isBooster,
+    ]);
+
     res.json(updateRecordResult.rows[0]);
   } catch (err) {
     console.error(err);
