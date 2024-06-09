@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createChildAccountController = void 0;
 const db_1 = __importDefault(require("../../../db"));
-const crypto_1 = __importDefault(require("crypto"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const JWT_SECRET = process.env.JWT_SECRET;
 const createChildAccountController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -29,7 +28,6 @@ const createChildAccountController = (req, res) => __awaiter(void 0, void 0, voi
     `;
         const guardianValues = [guardianName, guardianTelephone];
         const guardianResult = yield client.query(guardianQuery, guardianValues);
-        let generatedPassword = crypto_1.default.randomBytes(8).toString("hex");
         if (guardianResult.rows.length > 0) {
             guardianId = guardianResult.rows[0].id;
         }
@@ -40,7 +38,7 @@ const createChildAccountController = (req, res) => __awaiter(void 0, void 0, voi
         VALUES ($1, $2, $3, 'Guardian')
         RETURNING id
       `;
-            const hashedPassword = yield bcrypt_1.default.hash(generatedPassword, 10);
+            const hashedPassword = yield bcrypt_1.default.hash(guardianTelephone, 10);
             const newUserValues = [guardianName, guardianGender, guardianAddress];
             const newUserResult = yield client.query(newUserQuery, newUserValues);
             const newUserId = newUserResult.rows[0].id;
@@ -107,7 +105,7 @@ const createChildAccountController = (req, res) => __awaiter(void 0, void 0, voi
         yield client.query("COMMIT");
         res
             .status(201)
-            .json({ child: rows[0], guardianPassword: generatedPassword });
+            .json({ child: rows[0], guardianPassword: guardianTelephone });
     }
     catch (error) {
         yield client.query("ROLLBACK");

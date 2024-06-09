@@ -4,7 +4,6 @@ import { JwtPayload } from "../../middleware/auth/auth";
 // Get all children under the logged-in guardian
 export const getChildrenUnderGuardian = async (req: Request, res: Response) => {
   const { userId, guardianId } = req.userR as JwtPayload;
-  console.log("here:", guardianId);
 
   try {
     const childrenQuery = `

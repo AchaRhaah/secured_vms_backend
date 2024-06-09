@@ -17,7 +17,6 @@ const db_1 = __importDefault(require("../../db"));
 // Get all children under the logged-in guardian
 const getChildrenUnderGuardian = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId, guardianId } = req.userR;
-    console.log("here:", guardianId);
     try {
         const childrenQuery = `
       SELECT id, name, gender, date_of_birth, mother_name, mother_phone_number, father_name, father_phone_number,  place_of_birth, weight_at_birth

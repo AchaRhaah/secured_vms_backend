@@ -27,7 +27,6 @@ export const loginVaccinationStaffController = async (
       WHERE Users.name = $1 AND Users.user_type = $2
     `;
     const staffResult = await db.query(staffQuery, [username, user_type]);
-    console.log();
 
     if (staffResult.rows.length === 0) {
       return res.status(401).json({ error: "Invalid credentials" });

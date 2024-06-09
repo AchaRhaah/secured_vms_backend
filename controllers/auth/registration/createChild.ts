@@ -39,7 +39,6 @@ export const createChildAccountController = async (
     `;
     const guardianValues = [guardianName, guardianTelephone];
     const guardianResult = await client.query(guardianQuery, guardianValues);
-    let generatedPassword: string = crypto.randomBytes(8).toString("hex");
     if (guardianResult.rows.length > 0) {
       guardianId = guardianResult.rows[0].id;
     } else {
@@ -49,7 +48,7 @@ export const createChildAccountController = async (
         VALUES ($1, $2, $3, 'Guardian')
         RETURNING id
       `;
-      const hashedPassword = await bcrypt.hash(generatedPassword, 10);
+      const hashedPassword = await bcrypt.hash(guardianTelephone, 10);
 
       const newUserValues = [guardianName, guardianGender, guardianAddress];
       const newUserResult = await client.query(newUserQuery, newUserValues);
@@ -129,7 +128,7 @@ export const createChildAccountController = async (
     await client.query("COMMIT");
     res
       .status(201)
-      .json({ child: rows[0], guardianPassword: generatedPassword });
+      .json({ child: rows[0], guardianPassword: guardianTelephone });
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Error creating child:", error);

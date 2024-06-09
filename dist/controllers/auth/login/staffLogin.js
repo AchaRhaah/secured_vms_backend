@@ -30,7 +30,6 @@ const loginVaccinationStaffController = (req, res) => __awaiter(void 0, void 0, 
       WHERE Users.name = $1 AND Users.user_type = $2
     `;
         const staffResult = yield db_1.default.query(staffQuery, [username, user_type]);
-        console.log();
         if (staffResult.rows.length === 0) {
             return res.status(401).json({ error: "Invalid credentials" });
         }

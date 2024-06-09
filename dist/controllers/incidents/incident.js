@@ -29,15 +29,6 @@ const reportVaccineIncident = (req, res) => __awaiter(void 0, void 0, void 0, fu
             incidentType !== "other") {
             return res.status(400).json({ error: "Invalid incident type." });
         }
-        const checkQuantityQuery = `
-    SELECT quantity
-    FROM VaccineInventory
-    WHERE vaccine_id = $1;
-  `;
-        const quantityResult = yield db_1.default.query(checkQuantityQuery, [vaccineId]);
-        if (quantityResult.rows.length === 0) {
-            return res.status(400).json({ error: "Vaccine not found." });
-        }
         // Store the incident in the database
         const insertIncidentQuery = `
             INSERT INTO VaccineIncidents (vaccine_id, incident_type, description)
@@ -51,31 +42,11 @@ const reportVaccineIncident = (req, res) => __awaiter(void 0, void 0, void 0, fu
         ]);
         // Perform actions based on the incident type
         if (incidentType === "expiration") {
-            if (quantityResult.rows[0].quantity < 1) {
-                return res.status(400).json({ error: "Vaccine is out of stock." });
-            }
-            else {
-                // Deduct the number of expired vaccines from inventory
-                const deductExpiredVaccinesQuery = `
-        UPDATE VaccineInventory
-        SET quantity = quantity - $1
-        WHERE vaccine_id = $2
-        RETURNING *;
-      `;
-                const deduction = yield db_1.default.query(deductExpiredVaccinesQuery, [
-                    quantity,
-                    vaccineId,
-                ]);
-                // Check if deduction was successful
-                if (deduction.rows.length === 0) {
-                    return res.status(400).json({ error: "Failed to update inventory." });
-                }
-                return res.status(200).json({
-                    message: "Vaccine incident reported and inventory updated successfully.",
-                    incident: insertedIncident.rows[0],
-                    updatedInventory: deduction.rows[0],
-                });
-            }
+            // Deduct the number of expired vaccines from inventory
+            // Check if deduction was successful
+            return res.status(200).json({
+                incident: insertedIncident.rows[0],
+            });
         }
         res.status(200).json({
             message: "Vaccine incident reported successfully.",

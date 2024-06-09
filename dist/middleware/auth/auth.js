@@ -25,7 +25,6 @@ exports.verifyToken = verifyToken;
 const requireRole = (roles) => {
     return (req, res, next) => {
         var _a;
-        console.log(req.user);
         if (!((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) || !roles.includes(req.user.role)) {
             return res
                 .status(403)
