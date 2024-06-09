@@ -108,14 +108,15 @@ export const updateVaccinationRecordController = async (
       WHERE child_id = $5 AND vaccine_id = $6 
       RETURNING *;
     `;
-    const updateRecordResult = await db.query(updateRecordQuery, [
-      dateAdministered,
-      batchNumber,
-      nextAppointmentDate,
-      name,
-      childId,
-      vaccineId,
-    ]);
+      console.log("done");
+      const updateRecordResult = await db.query(updateRecordQuery, [
+        dateAdministered,
+        batchNumber,
+        nextAppointmentDate,
+        userId,
+        childId,
+        vaccineId,
+      ]);
     res.json(updateRecordResult.rows[0]);
   } catch (err) {
     console.error(err);

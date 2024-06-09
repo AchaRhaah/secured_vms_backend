@@ -27,6 +27,7 @@ export const deductVaccineInventoryController = async (vaccineId: number) => {
     if (quantityResult.rows.length === 0) {
       return { error: "Vaccine not found." };
     }
+    //
 
     const currentQuantity = quantityResult.rows[0].quantity;
 
@@ -48,7 +49,6 @@ export const deductVaccineInventoryController = async (vaccineId: number) => {
         DO UPDATE SET usage_count = DailyVaccineUsage.usage_count + 1;
       `;
       await db.query(dailyUsageQuery, [vaccineId, currentDate]);
-
       return updatedInventory;
     }
   } catch (error) {

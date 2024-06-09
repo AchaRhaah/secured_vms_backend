@@ -89,11 +89,12 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
       WHERE child_id = $5 AND vaccine_id = $6 
       RETURNING *;
     `;
+        console.log("done");
         const updateRecordResult = yield db_1.default.query(updateRecordQuery, [
             dateAdministered,
             batchNumber,
             nextAppointmentDate,
-            name,
+            userId,
             childId,
             vaccineId,
         ]);
