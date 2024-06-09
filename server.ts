@@ -8,6 +8,7 @@ import childRecordRoutes from "./routes/childRecordRoutes/childRecordRoutes";
 import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
+import logoutRoutes from "./routes/auth/logoutRoutes";
 dotenv.config();
 
 const app: Express = express();
@@ -25,6 +26,8 @@ app.use("/incident", incidentRoutes);
 app.use("/inventory", inventoryRoutes);
 app.use("/child-records", childRecordRoutes);
 app.use("/auth", loginRoutes);
+app.use("/auth", logoutRoutes);
+
 
 app.listen(process.env.PORT, () => {
   console.log(`running of port ${process.env.PORT}`);

@@ -107,3 +107,10 @@ CREATE TABLE VaccineIncidents (
     reported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (vaccine_id) REFERENCES VaccineInventory(id)
 );
+
+
+CREATE TABLE TokenBlacklist (
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(500) NOT NULL,
+    expiry TIMESTAMP NOT NULL
+);

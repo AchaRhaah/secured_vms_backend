@@ -3,12 +3,14 @@ import { getAllChildrenController } from "../../controllers/getData/getAllChildr
 import { getVaccinationReccordController } from "../../controllers/getData/getVaccinationRecord";
 import { updateVaccinationRecordController } from "../../controllers/updateRecord/updateRecord";
 import { verifyToken, requireRole } from "../../middleware/auth/auth";
+import { checkTokenBlacklist } from "../../controllers/logout/checkTokenBlackList";
 
 const router = Router();
 
 router.get(
   "/all",
   verifyToken,
+  checkTokenBlacklist,
   requireRole(["VaccinationStaff", "departmentManager"]),
   getAllChildrenController
 );
