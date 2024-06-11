@@ -77,7 +77,18 @@ CREATE TABLE VaccineInventory (
     vvm VARCHAR(255),
     daily_usage INT DEFAULT 0,
     restock INT DEFAULT 0,
+    expiry_date Date NOT NULL,
+    batch_number VARCHAR(255),
     children_vaccinated INT DEFAULT 0,
+    FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
+);
+
+
+CREATE TABLE DailyVaccineUsage (
+    id SERIAL PRIMARY KEY,
+    vaccine_id INT NOT NULL,
+    date DATE NOT NULL,
+    usage_count INT DEFAULT 0,
     FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
 );
 
@@ -90,15 +101,6 @@ CREATE TABLE VaccinationAppointments (
     FOREIGN KEY (child_id) REFERENCES Children(id),
     FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
 );
-
-CREATE TABLE DailyVaccineUsage (
-    id SERIAL PRIMARY KEY,
-    vaccine_id INT NOT NULL,
-    date DATE NOT NULL,
-    usage_count INT DEFAULT 0,
-    FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
-);
-
 CREATE TABLE VaccineIncidents (
     id SERIAL PRIMARY KEY,
     vaccine_id INT NOT NULL,
@@ -114,3 +116,22 @@ CREATE TABLE TokenBlacklist (
     token VARCHAR(500) NOT NULL,
     expiry TIMESTAMP NOT NULL
 );
+
+CREATE TABLE VaccineRestock (
+    id SERIAL PRIMARY KEY,
+    vaccine_id INT NOT NULL,
+    restock_quantity INT NOT NULL,
+    restock_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
+);
+
+
+
+ALTER TABLE DailyVaccineUsage
+ADD CONSTRAINT unique_vaccine_date UNIQUE (vaccine_id, date)
+
+ALTER TABLE VaccineInventory
+ADD COLUMN batch_number Date 
+
+ALTER TABLE VaccineInventory
+ADD CONSTRAINT unique_vaccine_id UNIQUE (vaccine_id);
