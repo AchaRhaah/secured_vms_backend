@@ -92,6 +92,14 @@ CREATE TABLE DailyVaccineUsage (
     FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
 );
 
+CREATE TABLE VaccineRestock (
+    id SERIAL PRIMARY KEY,
+    vaccine_id INT NOT NULL,
+    restock_quantity INT NOT NULL,
+    restock_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
+);
+
 CREATE TABLE VaccinationAppointments (
     id SERIAL PRIMARY KEY ,
     child_id INT NOT NULL,
@@ -101,6 +109,7 @@ CREATE TABLE VaccinationAppointments (
     FOREIGN KEY (child_id) REFERENCES Children(id),
     FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
 );
+
 CREATE TABLE VaccineIncidents (
     id SERIAL PRIMARY KEY,
     vaccine_id INT NOT NULL,
@@ -117,13 +126,7 @@ CREATE TABLE TokenBlacklist (
     expiry TIMESTAMP NOT NULL
 );
 
-CREATE TABLE VaccineRestock (
-    id SERIAL PRIMARY KEY,
-    vaccine_id INT NOT NULL,
-    restock_quantity INT NOT NULL,
-    restock_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    FOREIGN KEY (vaccine_id) REFERENCES Vaccines(id)
-);
+
 
 
 
