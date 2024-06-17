@@ -28,7 +28,10 @@ export const loginController = async (req: Request, res: Response) => {
         WHERE Users.name = $1 AND Users.user_type = 'Guardian'
       `;
       userResult = await db.query(userQuery, [username]);
-    } else if (user_type === "VaccinationStaff" || "departmentManager") {
+    } else if (
+      user_type === "VaccinationStaff" ||
+      user_type === "departmentManager"
+    ) {
       // Fetch Vaccination Staff data from the database
       userQuery = `
         SELECT Users.id, Users.name, Users.user_type, VaccinationStaff.password
@@ -55,14 +58,19 @@ export const loginController = async (req: Request, res: Response) => {
 
     // If a token exists in the request headers and the payload matches the fetched user data, return the same token
     if (token) {
-      const decodedToken = jwt.verify(token, secretKey) as JwtPayload;
-      if (
-        decodedToken &&
-        decodedToken.name === user.name &&
-        decodedToken.userId === user.id &&
-        decodedToken.role === user.user_type
-      ) {
-        return res.json({ token });
+      try {
+        const decodedToken = jwt.verify(token, secretKey) as JwtPayload;
+        if (
+          decodedToken &&
+          decodedToken.name === user.name &&
+          decodedToken.userId === user.id &&
+          decodedToken.role === user.user_type
+        ) {
+          return res.json({ token });
+        }
+      } catch (error) {
+        console.error("Token verification failed:", error);
+        // Fall through to generate a new token
       }
     }
 
@@ -73,7 +81,13 @@ export const loginController = async (req: Request, res: Response) => {
       { expiresIn: "24h" }
     );
 
-    res.json({ token: newToken });
+    res.cookie("token", newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Use secure flag for HTTPS
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: "strict",
+    });
+    res.json({ message: "Login successful", token: newToken });
   } catch (error) {
     console.error("Error logging in:", error);
     res.status(500).json({ error: "Internal server error" });

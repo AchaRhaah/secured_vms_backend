@@ -26,7 +26,7 @@ export const updateVaccinationRecordController = async (
       isBooster = false, // New field for booster
     } = req.body;
 
-    const token = req.headers.authorization?.split(" ")[1];
+    const token = req.cookies.token;
     if (!token) {
       return res
         .status(401)
@@ -54,7 +54,6 @@ export const updateVaccinationRecordController = async (
     // Check if the administered_by ID exists in the VaccinationStaff table
     const staffQuery = `SELECT id FROM VaccinationStaff WHERE id = $1`;
     const staffResult = await db.query(staffQuery, [administeredBy]);
-
     if (staffResult.rows.length === 0) {
       return res.status(400).json({ error: "Invalid administered_by ID." });
     }
@@ -62,25 +61,20 @@ export const updateVaccinationRecordController = async (
     // Check if the child is eligible for the vaccine
     const vaccineQuery = `SELECT eligible_age FROM Vaccines WHERE id = $1`;
     const vaccineResult = await db.query(vaccineQuery, [vaccineId]);
-
     if (vaccineResult.rows.length === 0) {
       return res.status(400).json({ error: "Invalid vaccine ID." });
     }
-
     const vaccine = vaccineResult.rows[0];
 
     const childQuery = `SELECT date_of_birth FROM Children WHERE id = $1`;
     const childResult = await db.query(childQuery, [childId]);
-
     if (childResult.rows.length === 0) {
       return res.status(400).json({ error: "Invalid child ID." });
     }
-
     const child = childResult.rows[0];
 
     const dateOfBirth = new Date(child.date_of_birth);
     const today = new Date();
-
     const yearsDifference = today.getFullYear() - dateOfBirth.getFullYear();
     const monthsDifference = today.getMonth() - dateOfBirth.getMonth();
     const childAgeInMonths = yearsDifference * 12 + monthsDifference;
@@ -91,6 +85,7 @@ export const updateVaccinationRecordController = async (
         .json({ error: "Child is not eligible for this vaccine yet." });
     }
 
+    // Deduct from vaccine inventory
     const deductions = await deductVaccineInventoryController(vaccineId);
     if (deductions.error) {
       return res.status(400).json({ error: deductions.error });
@@ -119,6 +114,21 @@ export const updateVaccinationRecordController = async (
       }
     }
 
+    // Find the next appointment date for the child and vaccine
+    const nextAppointmentQuery = `
+      SELECT * FROM VaccinationAppointments WHERE child_id = $1 AND appointment_date > CURRENT_DATE
+      ORDER BY appointment_date ASC
+      LIMIT 1;
+    `;
+    const nextAppointmentResult = await db.query(nextAppointmentQuery, [
+      childId,
+    ]);
+
+    let nextAppointment = null;
+    if (nextAppointmentResult.rows.length > 0) {
+      nextAppointment = nextAppointmentResult.rows[0].appointment_date;
+    }
+
     // Update the vaccination record
     const updateRecordQuery = `
       INSERT INTO VaccinationRecords 
@@ -131,7 +141,7 @@ export const updateVaccinationRecordController = async (
       vaccineId,
       dateAdministered,
       batchNumber,
-      nextAppointmentDate,
+      nextAppointment,
       administeredBy,
       isBooster,
     ]);

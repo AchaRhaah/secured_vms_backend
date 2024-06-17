@@ -17,8 +17,7 @@ const db_1 = __importDefault(require("../../db")); // Update with your database 
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const JWT_SECRET = process.env.JWT_SECRET || "oidsj-340349jkldfg";
 const revokeTokenController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+    const token = req.cookies.token;
     if (!token) {
         return res.status(401).json({ error: "Authorization header is missing." });
     }

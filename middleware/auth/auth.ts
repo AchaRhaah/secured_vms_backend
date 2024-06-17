@@ -30,8 +30,7 @@ export const verifyToken = (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.headers.authorization?.split(" ")[1];
-
+  const token = req.cookies.token; // Read token from cookies
   if (!token) {
     return res.status(401).json({ error: "Access denied, no token provided" });
   }

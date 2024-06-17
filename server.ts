@@ -10,6 +10,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import logoutRoutes from "./routes/auth/logoutRoutes";
+import cookieParser from "cookie-parser";
 import {
   authMiddleware,
   requireRole,
@@ -19,29 +20,40 @@ import { checkTokenBlacklist } from "./middleware/auth/checkTokenBlackList";
 dotenv.config();
 
 const app: Express = express();
-// middleware
 
-app.use(cors());
+// Configure CORS
+const corsOptions = {
+  origin: "http://localhost:5173",
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
+app.use(cookieParser()); // Add cookie parser middleware
+
 app.use(bodyParser.urlencoded({ extended: true }));
 
-//registration Routes
-
-app.use("/registration", verifyToken, checkTokenBlacklist, registrationRoute);
+// Registration Routes
 app.use(
-  "/children",
+  "/api/registration",
+  verifyToken,
+  checkTokenBlacklist,
+  registrationRoute
+);
+app.use(
+  "/api/children",
   verifyToken,
   checkTokenBlacklist,
   requireRole(["VaccinationStaff", "departmentManager"]),
   childrenRoutes
 );
-app.use("/incident", incidentRoutes);
-app.use("/inventory", inventoryRoutes);
-app.use("/child-records", authMiddleware, childRecordRoutes);
-app.use("/auth", loginRoutes);
-app.use("/auth", logoutRoutes);
-app.use("/report", reportRoutes);
+app.use("/api/incident", incidentRoutes);
+app.use("/api/inventory", inventoryRoutes);
+app.use("/api/child-records", authMiddleware, childRecordRoutes);
+app.use("/api/auth", loginRoutes);
+app.use("/api/auth", logoutRoutes);
+app.use("/api/report", reportRoutes);
 
 app.listen(process.env.PORT, () => {
-  console.log(`running of port ${process.env.PORT}`);
+  console.log(`running on port ${process.env.PORT}`);
 });

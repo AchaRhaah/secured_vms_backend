@@ -7,8 +7,7 @@ exports.authMiddleware = exports.requireRole = exports.verifyToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const secretKey = process.env.JWT_SECRET || "your_secret_key";
 const verifyToken = (req, res, next) => {
-    var _a;
-    const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+    const token = req.cookies.token; // Read token from cookies
     if (!token) {
         return res.status(401).json({ error: "Access denied, no token provided" });
     }

@@ -7,5 +7,5 @@ const updateRecord_1 = require("../../controllers/updateRecord/updateRecord");
 const router = (0, express_1.Router)();
 router.get("/all", getAllChildren_1.getAllChildrenController);
 router.get("/:childId/vaccinationRecords", getVaccinationRecord_1.getVaccinationReccordController);
-router.patch("/:childId/update-vrecord", updateRecord_1.updateVaccinationRecordController);
+router.patch("/update-vrecord", updateRecord_1.updateVaccinationRecordController);
 exports.default = router;

@@ -74,9 +74,17 @@ const createVaccinationStaffController = async (
       JWT_SECRET,
       { expiresIn: "9h" }
     );
+res.cookie("token", token, {
+  httpOnly: true,
+  sameSite: "strict",
 
-    // Send success response with created vaccination staff member data
-    res.status(201).json({ success: true, data: rows[0], token, user_type });
+  // secure: "production",
+  maxAge: 24 * 60 * 60 * 1000,
+});
+// Send success response with created vaccination staff member data
+res
+  .status(201)
+  .json({ success: true, data: rows[0], message: "creation successful" });
   } catch (error) {
     // Send error response if an error occurs
     console.error("Error creating vaccination staff:", error);

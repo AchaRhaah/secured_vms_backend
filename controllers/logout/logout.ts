@@ -10,24 +10,30 @@ interface JwtPayload {
 }
 
 export const forceExpireTokenController = (req: Request, res: Response) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ error: "Authorization header is missing." });
-  }
+const token = req.cookies.token;
+if (!token) {
+  return res.status(401).json({ error: "Authorization header is missing." });
+}
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+try {
+  const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-    // Generate a new token with a very short expiration time (e.g., 1 millisecond)
-    const newToken = jwt.sign(
-      { userId: decoded.userId, role: decoded.role, name: decoded.name },
-      JWT_SECRET,
-      { expiresIn: "1ms" } // Token expires almost immediately
-    );
+  // Generate a new token with a very short expiration time (e.g., 1 millisecond)
+  const newToken = jwt.sign(
+    { userId: decoded.userId, role: decoded.role, name: decoded.name },
+    JWT_SECRET,
+    { expiresIn: "1ms" } // Token expires almost immediately
+  );
 
-    res.json({ token: newToken, oldtoken: token });
-  } catch (error) {
-    console.error("Token verification error:", error);
-    res.status(401).json({ error: "Invalid token." });
-  }
+  res.cookie("token", newToken, {
+    httpOnly: true,
+    // secure: "production",
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: "strict",
+  });
+  res.json({ message: "logout successful" });
+} catch (error) {
+  console.error("Token verification error:", error);
+  res.status(401).json({ error: "Invalid token." });
+}
 };

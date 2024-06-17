@@ -7,8 +7,7 @@ exports.forceExpireTokenController = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const JWT_SECRET = process.env.JWT_SECRET || "oidsj-340349jkldfg";
 const forceExpireTokenController = (req, res) => {
-    var _a;
-    const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+    const token = req.cookies.token;
     if (!token) {
         return res.status(401).json({ error: "Authorization header is missing." });
     }
@@ -17,7 +16,13 @@ const forceExpireTokenController = (req, res) => {
         // Generate a new token with a very short expiration time (e.g., 1 millisecond)
         const newToken = jsonwebtoken_1.default.sign({ userId: decoded.userId, role: decoded.role, name: decoded.name }, JWT_SECRET, { expiresIn: "1ms" } // Token expires almost immediately
         );
-        res.json({ token: newToken, oldtoken: token });
+        res.cookie("token", newToken, {
+            httpOnly: true,
+            // secure: "production",
+            maxAge: 24 * 60 * 60 * 1000,
+            sameSite: "strict",
+        });
+        res.json({ message: "logout successful" });
     }
     catch (error) {
         console.error("Token verification error:", error);

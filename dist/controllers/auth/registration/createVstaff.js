@@ -60,8 +60,16 @@ const createVaccinationStaffController = (req, res) => __awaiter(void 0, void 0,
         const { rows } = yield client.query(staffQuery, staffValues);
         // VaccinationStaff;
         const token = jsonwebtoken_1.default.sign({ userId: newUserId, name, role: user_type }, JWT_SECRET, { expiresIn: "9h" });
+        res.cookie("token", token, {
+            httpOnly: true,
+            sameSite: "strict",
+            // secure: "production",
+            maxAge: 24 * 60 * 60 * 1000,
+        });
         // Send success response with created vaccination staff member data
-        res.status(201).json({ success: true, data: rows[0], token, user_type });
+        res
+            .status(201)
+            .json({ success: true, data: rows[0], message: "creation successful" });
     }
     catch (error) {
         // Send error response if an error occurs

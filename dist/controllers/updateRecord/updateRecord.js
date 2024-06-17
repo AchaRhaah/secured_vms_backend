@@ -18,11 +18,10 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const deduction_1 = require("../inventory/deduction");
 const JWT_SECRET = process.env.JWT_SECRET || "oidsj-340349jkldfg";
 const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
         const { childId, vaccineId, dateAdministered, batchNumber, nextAppointmentDate, administeredBy, isBooster = false, // New field for booster
          } = req.body;
-        const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+        const token = req.cookies.token;
         if (!token) {
             return res
                 .status(401)
@@ -68,6 +67,7 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
                 .status(400)
                 .json({ error: "Child is not eligible for this vaccine yet." });
         }
+        // Deduct from vaccine inventory
         const deductions = yield (0, deduction_1.deductVaccineInventoryController)(vaccineId);
         if (deductions.error) {
             return res.status(400).json({ error: deductions.error });
@@ -93,6 +93,19 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
                 });
             }
         }
+        // Find the next appointment date for the child and vaccine
+        const nextAppointmentQuery = `
+      SELECT * FROM VaccinationAppointments WHERE child_id = $1 AND appointment_date > CURRENT_DATE
+      ORDER BY appointment_date ASC
+      LIMIT 1;
+    `;
+        const nextAppointmentResult = yield db_1.default.query(nextAppointmentQuery, [
+            childId,
+        ]);
+        let nextAppointment = null;
+        if (nextAppointmentResult.rows.length > 0) {
+            nextAppointment = nextAppointmentResult.rows[0].appointment_date;
+        }
         // Update the vaccination record
         const updateRecordQuery = `
       INSERT INTO VaccinationRecords 
@@ -105,7 +118,7 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
             vaccineId,
             dateAdministered,
             batchNumber,
-            nextAppointmentDate,
+            nextAppointment,
             administeredBy,
             isBooster,
         ]);
