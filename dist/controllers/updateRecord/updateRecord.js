@@ -19,7 +19,7 @@ const deduction_1 = require("../inventory/deduction");
 const JWT_SECRET = process.env.JWT_SECRET || "oidsj-340349jkldfg";
 const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { childId, vaccineId, dateAdministered, administeredBy, isBooster = false, // New field for booster
+        const { childId, vaccineId, isBooster = false, // New field for booster
          } = req.body;
         const token = req.cookies.token;
         if (!token) {
@@ -27,12 +27,29 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
                 .status(401)
                 .json({ error: "Authorization header is missing." });
         }
+        const dateAdministered = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
         const decodedToken = jsonwebtoken_1.default.verify(token, JWT_SECRET);
-        const { userId, name } = decodedToken;
-        // Check if all required fields are present
-        if (!childId || !vaccineId || !dateAdministered || !administeredBy) {
-            return res.status(400).json({ error: "All fields are required." });
+        // Extracting userId and name from decoded token
+        const { userId } = decodedToken;
+        // // Check if all required fields are present
+        // if (!childId || !vaccineId) {
+        //   return res.status(400).json({ error: "All fields are required." });
+        // }
+        // Retrieve staff ID from JWT payload
+        const userQuery = `
+      SELECT v.id as vaccination_staff_id
+      FROM Users u
+      JOIN VaccinationStaff v ON u.id = v.user_id
+      WHERE u.id = $1
+    `;
+        const userResult = yield db_1.default.query(userQuery, [userId]);
+        if (userResult.rows.length === 0 ||
+            !userResult.rows[0].vaccination_staff_id) {
+            return res
+                .status(400)
+                .json({ error: "User is not associated with any vaccination staff." });
         }
+        const administeredBy = userResult.rows[0].vaccination_staff_id;
         // Check if the administered_by ID exists in the VaccinationStaff table
         const staffQuery = `SELECT id FROM VaccinationStaff WHERE id = $1`;
         const staffResult = yield db_1.default.query(staffQuery, [administeredBy]);
@@ -76,6 +93,7 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
         }
         else {
             if (checkTakenResult.rows.length > 0) {
+                console.log();
                 return res.status(400).json({
                     error: "This vaccine has already been administered to the child.",
                 });
