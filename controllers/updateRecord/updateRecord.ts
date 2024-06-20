@@ -20,8 +20,6 @@ export const updateVaccinationRecordController = async (
       childId,
       vaccineId,
       dateAdministered,
-      batchNumber,
-      nextAppointmentDate,
       administeredBy,
       isBooster = false, // New field for booster
     } = req.body;
@@ -40,14 +38,7 @@ export const updateVaccinationRecordController = async (
     const { userId, name } = decodedToken;
 
     // Check if all required fields are present
-    if (
-      !childId ||
-      !vaccineId ||
-      !dateAdministered ||
-      !batchNumber ||
-      !nextAppointmentDate ||
-      !administeredBy
-    ) {
+    if (!childId || !vaccineId || !dateAdministered || !administeredBy) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
@@ -66,26 +57,20 @@ export const updateVaccinationRecordController = async (
     }
     const vaccine = vaccineResult.rows[0];
 
-    const childQuery = `SELECT date_of_birth FROM Children WHERE id = $1`;
-    const childResult = await db.query(childQuery, [childId]);
-    if (childResult.rows.length === 0) {
-      return res.status(400).json({ error: "Invalid child ID." });
-    }
-    const child = childResult.rows[0];
-
-    const dateOfBirth = new Date(child.date_of_birth);
-    const today = new Date();
-    const yearsDifference = today.getFullYear() - dateOfBirth.getFullYear();
-    const monthsDifference = today.getMonth() - dateOfBirth.getMonth();
-    const childAgeInMonths = yearsDifference * 12 + monthsDifference;
-
-    if (childAgeInMonths < vaccine.eligible_age) {
+    // Retrieve batch number for the vaccine
+    const batchNumberQuery = `
+      SELECT batch_number
+      FROM VaccineInventory
+      WHERE vaccine_id = $1
+      LIMIT 1;
+    `;
+    const batchNumberResult = await db.query(batchNumberQuery, [vaccineId]);
+    if (batchNumberResult.rows.length === 0) {
       return res
         .status(400)
-        .json({ error: "Child is not eligible for this vaccine yet." });
+        .json({ error: "No batch number found for this vaccine." });
     }
-
-    // Deduct from vaccine inventory
+    const batchNumber = batchNumberResult.rows[0].batch_number;
 
     // Check if the child has already taken the vaccine
     const checkTakenQuery = `SELECT * FROM VaccinationRecords WHERE child_id = $1 AND vaccine_id = $2 AND taken = TRUE`;
@@ -141,15 +126,22 @@ export const updateVaccinationRecordController = async (
       administeredBy,
       isBooster,
     ]);
-    console.log(updateRecordResult.rows[0]);
-    if (updateRecordResult.rows[0]) {
-      const deductions = await deductVaccineInventoryController(vaccineId);
-      if (deductions.error) {
-        return res.status(400).json({ error: deductions.error });
-      }
+
+    if (updateRecordResult.rows.length === 0) {
+      return res
+        .status(500)
+        .json({ error: "Failed to update vaccination record." });
     }
 
-    res.json(updateRecordResult.rows[0]);
+    const updatedRecord = updateRecordResult.rows[0];
+
+    // Deduct from vaccine inventory
+    const deductions = await deductVaccineInventoryController(vaccineId);
+    if (deductions.error) {
+      return res.status(400).json({ error: deductions.error });
+    }
+
+    res.json(updatedRecord);
   } catch (err) {
     console.error(err);
     res.status(500).send("Server error");
