@@ -14,11 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.restockVaccineController = void 0;
 const db_1 = __importDefault(require("../../db"));
-// Restock Vaccine Controller
 const restockVaccineController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { vaccineId, quantity, batchNumber, expiryDate } = req.body;
-        // Check if all required fields are present
         if (!vaccineId ||
             !quantity ||
             quantity <= 0 ||
@@ -28,13 +26,11 @@ const restockVaccineController = (req, res) => __awaiter(void 0, void 0, void 0,
                 error: "Vaccine ID, quantity, batch number, and expiry date are required.",
             });
         }
-        // Check if the vaccine ID exists
         const vaccineQuery = `SELECT id FROM Vaccines WHERE id = $1`;
         const vaccineResult = yield db_1.default.query(vaccineQuery, [vaccineId]);
         if (vaccineResult.rows.length === 0) {
             return res.status(400).json({ error: "Invalid vaccine ID." });
         }
-        // Insert a new entry into the VaccineRestock table with the restock date
         const restockInventoryQuery = `
       INSERT INTO VaccineRestock (vaccine_id, restock_quantity, restock_date)
       VALUES ($1, $2, CURRENT_DATE)
@@ -44,7 +40,6 @@ const restockVaccineController = (req, res) => __awaiter(void 0, void 0, void 0,
             vaccineId,
             quantity,
         ]);
-        // Update the total quantity in the VaccineInventory table and add batch number and expiry date
         const updateInventoryQuery = `
       INSERT INTO VaccineInventory (vaccine_id, quantity, batch_number, expiry_date)
       VALUES ($1, $2, $3, $4)
@@ -58,7 +53,6 @@ const restockVaccineController = (req, res) => __awaiter(void 0, void 0, void 0,
             batchNumber,
             expiryDate,
         ]);
-        //
         res.json({
             restock: restockInventoryResult.rows[0],
             inventory: updateInventoryResult.rows[0],

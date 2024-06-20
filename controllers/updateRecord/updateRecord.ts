@@ -86,10 +86,6 @@ export const updateVaccinationRecordController = async (
     }
 
     // Deduct from vaccine inventory
-    const deductions = await deductVaccineInventoryController(vaccineId);
-    if (deductions.error) {
-      return res.status(400).json({ error: deductions.error });
-    }
 
     // Check if the child has already taken the vaccine
     const checkTakenQuery = `SELECT * FROM VaccinationRecords WHERE child_id = $1 AND vaccine_id = $2 AND taken = TRUE`;
@@ -145,6 +141,13 @@ export const updateVaccinationRecordController = async (
       administeredBy,
       isBooster,
     ]);
+    console.log(updateRecordResult.rows[0]);
+    if (updateRecordResult.rows[0]) {
+      const deductions = await deductVaccineInventoryController(vaccineId);
+      if (deductions.error) {
+        return res.status(400).json({ error: deductions.error });
+      }
+    }
 
     res.json(updateRecordResult.rows[0]);
   } catch (err) {

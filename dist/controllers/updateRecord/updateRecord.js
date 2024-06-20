@@ -68,10 +68,6 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
                 .json({ error: "Child is not eligible for this vaccine yet." });
         }
         // Deduct from vaccine inventory
-        const deductions = yield (0, deduction_1.deductVaccineInventoryController)(vaccineId);
-        if (deductions.error) {
-            return res.status(400).json({ error: deductions.error });
-        }
         // Check if the child has already taken the vaccine
         const checkTakenQuery = `SELECT * FROM VaccinationRecords WHERE child_id = $1 AND vaccine_id = $2 AND taken = TRUE`;
         const checkTakenResult = yield db_1.default.query(checkTakenQuery, [
@@ -122,6 +118,13 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
             administeredBy,
             isBooster,
         ]);
+        console.log(updateRecordResult.rows[0]);
+        if (updateRecordResult.rows[0]) {
+            const deductions = yield (0, deduction_1.deductVaccineInventoryController)(vaccineId);
+            if (deductions.error) {
+                return res.status(400).json({ error: deductions.error });
+            }
+        }
         res.json(updateRecordResult.rows[0]);
     }
     catch (err) {

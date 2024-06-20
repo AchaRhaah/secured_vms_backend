@@ -133,6 +133,11 @@ CREATE TABLE TokenBlacklist (
 ALTER TABLE DailyVaccineUsage
 ADD CONSTRAINT unique_vaccine_date UNIQUE (vaccine_id, date)
 
+
+ALTER TABLE DailyVaccineUsage
+ADD COLUMN balance NUMBER 
+
+
 ALTER TABLE VaccineInventory
 ADD COLUMN batch_number Date 
 
