@@ -7,14 +7,30 @@ export const getWeeklyVaccineReport = async (req: Request, res: Response) => {
     const { weekNumber } = req.query;
     const parsedWeekNumber = parseInt(weekNumber as string, 10);
 
+    // Query to calculate initial stock before the given week
+    const initialStockQuery = `
+      SELECT COALESCE(SUM(vr.restock_quantity - COALESCE(dv.usage_count, 0)), 0) AS initial_stock
+      FROM VaccineRestock vr
+      LEFT JOIN DailyVaccineUsage dv ON vr.vaccine_id = dv.vaccine_id AND vr.restock_date = dv.date
+      WHERE vr.vaccine_id = $1 AND EXTRACT(WEEK FROM vr.restock_date) < $2
+    `;
+
+    const initialStockResult = await db.query(initialStockQuery, [
+      vaccineId,
+      parsedWeekNumber,
+    ]);
+
+    const initialStock = initialStockResult.rows[0].initial_stock;
+
+    // Query to get daily restock and usage data for the given week
     const weeklyReportQuery = `
       WITH DailyReport AS (
         SELECT 
           d.date AS date,
-          COALESCE(SUM(vr.restock_quantity), 0) AS total_restock_quantity,
+          COALESCE(SUM(COALESCE(vr.restock_quantity::numeric, 0)), 0) AS total_restock_quantity,
           vi.batch_number AS batch_number,
           vi.expiry_date AS expiry_date,
-          COALESCE(d.usage_count, 0) AS usage_count,
+          COALESCE(SUM(COALESCE(d.usage_count::numeric, 0)), 0) AS usage_count,
           vi.vvm AS vvm
         FROM (
           SELECT 
@@ -28,7 +44,7 @@ export const getWeeklyVaccineReport = async (req: Request, res: Response) => {
         LEFT JOIN VaccineInventory AS vi ON d.vaccine_id = vi.vaccine_id
         LEFT JOIN VaccineRestock AS vr ON d.date = vr.restock_date AND d.vaccine_id = vr.vaccine_id
         WHERE d.vaccine_id = $1
-        GROUP BY d.date, vi.batch_number, vi.expiry_date, d.usage_count, vi.vvm
+        GROUP BY d.date, vi.batch_number, vi.expiry_date, vi.vvm
       )
       SELECT 
         date,
@@ -37,8 +53,8 @@ export const getWeeklyVaccineReport = async (req: Request, res: Response) => {
         expiry_date,
         usage_count,
         vvm,
-        SUM(total_restock_quantity - usage_count) OVER(ORDER BY date ASC) AS quantity,
-        SUM(total_restock_quantity - usage_count) OVER(ORDER BY date ASC) AS balance
+        $3 + SUM(total_restock_quantity - usage_count) OVER(ORDER BY date ASC) AS quantity,
+        $3 + SUM(total_restock_quantity - usage_count) OVER(ORDER BY date ASC) AS balance
       FROM DailyReport
       ORDER BY date ASC;
     `;
@@ -46,6 +62,7 @@ export const getWeeklyVaccineReport = async (req: Request, res: Response) => {
     const weeklyReportResult = await db.query(weeklyReportQuery, [
       vaccineId,
       parsedWeekNumber,
+      initialStock,
     ]);
 
     res.json(weeklyReportResult.rows);
