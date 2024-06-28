@@ -14,12 +14,16 @@ export const getAllVaccinesMonthlyReport = async (
     const allVaccinesMonthlyReportQuery = `
       SELECT 
         v.name AS vaccine_name,
-        COALESCE(SUM(d.usage_count), 0) AS total_children_vaccinated
+        COALESCE(SUM(d.usage_count), 0) AS total_children_vaccinated,
+        COALESCE(vi.quantity, 0) AS balance,
+        vi.expiry_date
       FROM Vaccines AS v
       LEFT JOIN DailyVaccineUsage AS d ON v.id = d.vaccine_id AND EXTRACT(MONTH FROM d.date) = $1
-      GROUP BY v.name, d.date
-      ORDER BY v.name, d.date;
+      LEFT JOIN VaccineInventory AS vi ON v.id = vi.vaccine_id
+      GROUP BY v.name, vi.quantity, vi.expiry_date
+      ORDER BY v.name;
     `;
+
     const allVaccinesMonthlyReportResult = await db.query(
       allVaccinesMonthlyReportQuery,
       [month]

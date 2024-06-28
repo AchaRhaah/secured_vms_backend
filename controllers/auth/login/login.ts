@@ -45,7 +45,7 @@ export const loginController = async (req: Request, res: Response) => {
     }
 
     if (userResult.rows.length === 0) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "wrong name or password" });
     }
 
     const user = userResult.rows[0];
@@ -53,7 +53,7 @@ export const loginController = async (req: Request, res: Response) => {
     // Compare the password with the stored hashed password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "wrong name or password" });
     }
 
     // If a token exists in the request headers and the payload matches the fetched user data, return the same token
@@ -87,7 +87,12 @@ export const loginController = async (req: Request, res: Response) => {
       maxAge: 24 * 60 * 60 * 1000,
       sameSite: "strict",
     });
-    res.json({ message: "Login successful", token: newToken });
+    res.json({
+      message: "Login successful",
+      role: user.user_type,
+      name: user.name,
+      userId: user.id,
+    });
   } catch (error) {
     console.error("Error logging in:", error);
     res.status(500).json({ error: "Internal server error" });

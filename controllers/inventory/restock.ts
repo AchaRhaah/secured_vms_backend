@@ -47,7 +47,6 @@ export const restockVaccineController = async (req: Request, res: Response) => {
       batchNumber,
       expiryDate,
     ]);
-
     res.json({
       restock: restockInventoryResult.rows[0],
       inventory: updateInventoryResult.rows[0],

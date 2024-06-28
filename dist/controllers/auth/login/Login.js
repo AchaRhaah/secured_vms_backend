@@ -49,13 +49,13 @@ const loginController = (req, res) => __awaiter(void 0, void 0, void 0, function
             return res.status(400).json({ error: "Invalid user type" });
         }
         if (userResult.rows.length === 0) {
-            return res.status(401).json({ error: "Invalid credentials" });
+            return res.status(401).json({ error: "wrong name or password" });
         }
         const user = userResult.rows[0];
         // Compare the password with the stored hashed password
         const isPasswordValid = yield bcrypt_1.default.compare(password, user.password);
         if (!isPasswordValid) {
-            return res.status(401).json({ error: "Invalid credentials" });
+            return res.status(401).json({ error: "wrong name or password" });
         }
         // If a token exists in the request headers and the payload matches the fetched user data, return the same token
         if (token) {
@@ -81,7 +81,12 @@ const loginController = (req, res) => __awaiter(void 0, void 0, void 0, function
             maxAge: 24 * 60 * 60 * 1000,
             sameSite: "strict",
         });
-        res.json({ message: "Login successful", token: newToken });
+        res.json({
+            message: "Login successful",
+            role: user.user_type,
+            name: user.name,
+            userId: user.id,
+        });
     }
     catch (error) {
         console.error("Error logging in:", error);

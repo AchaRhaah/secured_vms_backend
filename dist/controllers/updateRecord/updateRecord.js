@@ -31,10 +31,6 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
         const decodedToken = jsonwebtoken_1.default.verify(token, JWT_SECRET);
         // Extracting userId and name from decoded token
         const { userId } = decodedToken;
-        // // Check if all required fields are present
-        // if (!childId || !vaccineId) {
-        //   return res.status(400).json({ error: "All fields are required." });
-        // }
         // Retrieve staff ID from JWT payload
         const userQuery = `
       SELECT v.id as vaccination_staff_id
@@ -93,11 +89,15 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
         }
         else {
             if (checkTakenResult.rows.length > 0) {
-                console.log();
                 return res.status(400).json({
                     error: "This vaccine has already been administered to the child.",
                 });
             }
+        }
+        // Deduct from vaccine inventory
+        const deductions = yield (0, deduction_1.deductVaccineInventoryController)(vaccineId);
+        if (deductions.error) {
+            return res.status(400).json({ error: deductions.error });
         }
         // Find the next appointment date for the child and vaccine
         const nextAppointmentQuery = `
@@ -114,19 +114,19 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
         }
         // Update the vaccination record
         const updateRecordQuery = `
-      INSERT INTO VaccinationRecords 
-      (child_id, vaccine_id, date_administered, batch_number, next_appointment_date, administered_by, taken, eligible, is_booster) 
-      VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE, $7)
+      UPDATE VaccinationRecords 
+      SET date_administered = $1, batch_number = $2, next_appointment_date = $3, administered_by = $4, is_booster = $5, taken = TRUE
+      WHERE child_id = $6 AND vaccine_id = $7
       RETURNING *;
     `;
         const updateRecordResult = yield db_1.default.query(updateRecordQuery, [
-            childId,
-            vaccineId,
             dateAdministered,
             batchNumber,
             nextAppointment,
             administeredBy,
             isBooster,
+            childId,
+            vaccineId,
         ]);
         if (updateRecordResult.rows.length === 0) {
             return res
@@ -134,11 +134,6 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
                 .json({ error: "Failed to update vaccination record." });
         }
         const updatedRecord = updateRecordResult.rows[0];
-        // Deduct from vaccine inventory
-        const deductions = yield (0, deduction_1.deductVaccineInventoryController)(vaccineId);
-        if (deductions.error) {
-            return res.status(400).json({ error: deductions.error });
-        }
         res.json(updatedRecord);
     }
     catch (err) {
