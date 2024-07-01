@@ -50,7 +50,7 @@ app.use(
 );
 app.use("/api/incident", incidentRoutes);
 app.use("/api/inventory", inventoryRoutes);
-app.use("/api/child-records", authMiddleware, childRecordRoutes);
+app.use("/api/child-records", childRecordRoutes);
 app.use("/api/auth", loginRoutes);
 app.use("/api/auth", logoutRoutes);
 app.use("/api/report", reportRoutes);

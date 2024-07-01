@@ -30,6 +30,7 @@ const getVaccinationReccordController = (req, res) => __awaiter(void 0, void 0, 
     vr.eligible,
     vr.date_administered,
     vr.batch_number,
+    vr.is_booster,
     vr.next_appointment_date,
     CASE 
         WHEN u.name IS NOT NULL THEN u.name

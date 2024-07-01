@@ -35,10 +35,10 @@ const getWeeklyVaccineReport = (req, res) => __awaiter(void 0, void 0, void 0, f
         const weeklyReportQuery = `
       WITH DailyReport AS (
         SELECT 
-          d.date AS date,
+          to_char(d.date, 'YYYY-MM-DD') AS date,
           COALESCE(SUM(COALESCE(vr.restock_quantity::numeric, 0)), 0) AS total_restock_quantity,
           vi.batch_number AS batch_number,
-          vi.expiry_date AS expiry_date,
+          to_char(vi.expiry_date, 'YYYY-MM-DD') AS expiry_date,
           COALESCE(SUM(COALESCE(d.usage_count::numeric, 0)), 0) AS usage_count,
           vi.vvm AS vvm
         FROM (
@@ -54,17 +54,29 @@ const getWeeklyVaccineReport = (req, res) => __awaiter(void 0, void 0, void 0, f
         LEFT JOIN VaccineRestock AS vr ON d.date = vr.restock_date AND d.vaccine_id = vr.vaccine_id
         WHERE d.vaccine_id = $1
         GROUP BY d.date, vi.batch_number, vi.expiry_date, vi.vvm
+      ),
+      CumulativeBalance AS (
+        SELECT
+          date,
+          total_restock_quantity,
+          batch_number,
+          expiry_date,
+          usage_count,
+          vvm,
+          $3 + SUM(total_restock_quantity - usage_count) OVER(ORDER BY date ASC) AS balance
+        FROM DailyReport
       )
-      SELECT 
+      SELECT
         date,
         total_restock_quantity AS restock_quantity,
         batch_number,
         expiry_date,
         usage_count,
         vvm,
-        $3 + SUM(total_restock_quantity - usage_count) OVER(ORDER BY date ASC) AS quantity,
-        $3 + SUM(total_restock_quantity - usage_count) OVER(ORDER BY date ASC) AS balance
-      FROM DailyReport
+        LAG(balance, 1, $3) OVER (ORDER BY date) AS starting_amount,
+        balance AS quantity,
+        balance
+      FROM CumulativeBalance
       ORDER BY date ASC;
     `;
         const weeklyReportResult = yield db_1.default.query(weeklyReportQuery, [

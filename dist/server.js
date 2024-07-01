@@ -34,7 +34,7 @@ app.use("/api/registration", auth_1.verifyToken, checkTokenBlackList_1.checkToke
 app.use("/api/children", auth_1.verifyToken, checkTokenBlackList_1.checkTokenBlacklist, (0, auth_1.requireRole)(["VaccinationStaff", "departmentManager"]), childrenRoutes_1.default);
 app.use("/api/incident", incidentRoutes_1.default);
 app.use("/api/inventory", inventoryRoutes_1.default);
-app.use("/api/child-records", auth_1.authMiddleware, childRecordRoutes_1.default);
+app.use("/api/child-records", childRecordRoutes_1.default);
 app.use("/api/auth", loginRoutes_1.default);
 app.use("/api/auth", logoutRoutes_1.default);
 app.use("/api/report", reportRoutes_1.default);
