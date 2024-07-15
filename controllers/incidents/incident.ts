@@ -16,7 +16,7 @@ export const reportVaccineIncident = async (req: Request, res: Response) => {
     // Check if the incident type is valid
     if (
       incidentType !== "expiration" &&
-      incidentType !== "side_effect" &&
+      incidentType !== "side effect" &&
       incidentType !== "other"
     ) {
       return res.status(400).json({ error: "Invalid incident type." });

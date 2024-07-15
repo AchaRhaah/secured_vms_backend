@@ -9,6 +9,7 @@ const childrenRoutes_1 = __importDefault(require("./routes/childRoutes/childrenR
 const incidentRoutes_1 = __importDefault(require("./routes/incident/incidentRoutes"));
 const inventoryRoutes_1 = __importDefault(require("./routes/inventory/inventoryRoutes"));
 const loginRoutes_1 = __importDefault(require("./routes/auth/loginRoutes"));
+const StaffRoutes_1 = __importDefault(require("./routes/staffRoutes/StaffRoutes"));
 const childRecordRoutes_1 = __importDefault(require("./routes/childRecordRoutes/childRecordRoutes"));
 const reportRoutes_1 = __importDefault(require("./routes/report/reportRoutes"));
 const body_parser_1 = __importDefault(require("body-parser"));
@@ -38,6 +39,7 @@ app.use("/api/child-records", childRecordRoutes_1.default);
 app.use("/api/auth", loginRoutes_1.default);
 app.use("/api/auth", logoutRoutes_1.default);
 app.use("/api/report", reportRoutes_1.default);
+app.use("/api/staff", StaffRoutes_1.default);
 app.listen(process.env.PORT, () => {
     console.log(`running on port ${process.env.PORT}`);
 });

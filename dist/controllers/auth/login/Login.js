@@ -27,10 +27,10 @@ const loginController = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (user_type === "Guardian") {
             // Fetch Guardian data from the database
             userQuery = `
-        SELECT Users.id, Users.name, Users.user_type, Guardians.password, Guardians.id
+        SELECT Users.id, Users.username, Users.user_type, Guardians.password, Guardians.id
         FROM Users
         INNER JOIN Guardians ON Users.id = Guardians.user_id
-        WHERE Users.name = $1 AND Users.user_type = 'Guardian'
+        WHERE Users.username = $1 AND Users.user_type = 'Guardian'
       `;
             userResult = yield db_1.default.query(userQuery, [username]);
         }
@@ -38,10 +38,10 @@ const loginController = (req, res) => __awaiter(void 0, void 0, void 0, function
             user_type === "departmentManager") {
             // Fetch Vaccination Staff data from the database
             userQuery = `
-        SELECT Users.id, Users.name, Users.user_type, VaccinationStaff.password
+        SELECT Users.id, Users.username, Users.user_type, VaccinationStaff.password
         FROM Users
         INNER JOIN VaccinationStaff ON Users.id = VaccinationStaff.user_id
-        WHERE Users.name = $1 AND Users.user_type = $2
+        WHERE Users.username = $1 AND Users.user_type = $2
       `;
             userResult = yield db_1.default.query(userQuery, [username, user_type]);
         }
@@ -49,20 +49,20 @@ const loginController = (req, res) => __awaiter(void 0, void 0, void 0, function
             return res.status(400).json({ error: "Invalid user type" });
         }
         if (userResult.rows.length === 0) {
-            return res.status(401).json({ error: "wrong name or password" });
+            return res.status(401).json({ error: "Wrong username or password" });
         }
         const user = userResult.rows[0];
         // Compare the password with the stored hashed password
         const isPasswordValid = yield bcrypt_1.default.compare(password, user.password);
         if (!isPasswordValid) {
-            return res.status(401).json({ error: "wrong name or password" });
+            return res.status(401).json({ error: "Wrong username or password" });
         }
         // If a token exists in the request headers and the payload matches the fetched user data, return the same token
         if (token) {
             try {
                 const decodedToken = jsonwebtoken_1.default.verify(token, secretKey);
                 if (decodedToken &&
-                    decodedToken.name === user.name &&
+                    decodedToken.name === user.username &&
                     decodedToken.userId === user.id &&
                     decodedToken.role === user.user_type) {
                     return res.json({ token });
@@ -74,7 +74,7 @@ const loginController = (req, res) => __awaiter(void 0, void 0, void 0, function
             }
         }
         // Generate a new JWT with the user's role
-        const newToken = jsonwebtoken_1.default.sign({ userId: user.id, role: user.user_type, name: user.name }, secretKey, { expiresIn: "24h" });
+        const newToken = jsonwebtoken_1.default.sign({ userId: user.id, role: user.user_type, name: user.username }, secretKey, { expiresIn: "24h" });
         res.cookie("token", newToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production", // Use secure flag for HTTPS
@@ -84,8 +84,9 @@ const loginController = (req, res) => __awaiter(void 0, void 0, void 0, function
         res.json({
             message: "Login successful",
             role: user.user_type,
-            name: user.name,
+            name: user.username,
             userId: user.id,
+            token: newToken,
         });
     }
     catch (error) {

@@ -22,10 +22,10 @@ export const loginController = async (req: Request, res: Response) => {
     if (user_type === "Guardian") {
       // Fetch Guardian data from the database
       userQuery = `
-        SELECT Users.id, Users.name, Users.user_type, Guardians.password, Guardians.id
+        SELECT Users.id, Users.username, Users.user_type, Guardians.password, Guardians.id
         FROM Users
         INNER JOIN Guardians ON Users.id = Guardians.user_id
-        WHERE Users.name = $1 AND Users.user_type = 'Guardian'
+        WHERE Users.username = $1 AND Users.user_type = 'Guardian'
       `;
       userResult = await db.query(userQuery, [username]);
     } else if (
@@ -34,10 +34,10 @@ export const loginController = async (req: Request, res: Response) => {
     ) {
       // Fetch Vaccination Staff data from the database
       userQuery = `
-        SELECT Users.id, Users.name, Users.user_type, VaccinationStaff.password
+        SELECT Users.id, Users.username, Users.user_type, VaccinationStaff.password
         FROM Users
         INNER JOIN VaccinationStaff ON Users.id = VaccinationStaff.user_id
-        WHERE Users.name = $1 AND Users.user_type = $2
+        WHERE Users.username = $1 AND Users.user_type = $2
       `;
       userResult = await db.query(userQuery, [username, user_type]);
     } else {
@@ -45,7 +45,7 @@ export const loginController = async (req: Request, res: Response) => {
     }
 
     if (userResult.rows.length === 0) {
-      return res.status(401).json({ error: "wrong name or password" });
+      return res.status(401).json({ error: "Wrong username or password" });
     }
 
     const user = userResult.rows[0];
@@ -53,7 +53,7 @@ export const loginController = async (req: Request, res: Response) => {
     // Compare the password with the stored hashed password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: "wrong name or password" });
+      return res.status(401).json({ error: "Wrong username or password" });
     }
 
     // If a token exists in the request headers and the payload matches the fetched user data, return the same token
@@ -62,7 +62,7 @@ export const loginController = async (req: Request, res: Response) => {
         const decodedToken = jwt.verify(token, secretKey) as JwtPayload;
         if (
           decodedToken &&
-          decodedToken.name === user.name &&
+          decodedToken.name === user.username &&
           decodedToken.userId === user.id &&
           decodedToken.role === user.user_type
         ) {
@@ -76,7 +76,7 @@ export const loginController = async (req: Request, res: Response) => {
 
     // Generate a new JWT with the user's role
     const newToken = jwt.sign(
-      { userId: user.id, role: user.user_type, name: user.name },
+      { userId: user.id, role: user.user_type, name: user.username },
       secretKey,
       { expiresIn: "24h" }
     );
@@ -90,8 +90,9 @@ export const loginController = async (req: Request, res: Response) => {
     res.json({
       message: "Login successful",
       role: user.user_type,
-      name: user.name,
+      name: user.username,
       userId: user.id,
+      token: newToken,
     });
   } catch (error) {
     console.error("Error logging in:", error);

@@ -5,7 +5,8 @@ import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { PoolClient } from "pg";
 
-// Controller function to create a new vaccination staff member
+dotenv.config();
+
 const JWT_SECRET = process.env.JWT_SECRET || "oifsod9askj934893";
 
 const createVaccinationStaffController = async (
@@ -15,7 +16,6 @@ const createVaccinationStaffController = async (
   const client: PoolClient = await db.connect();
 
   try {
-    // Extract necessary data from the request body
     const {
       name,
       user_type,
@@ -26,7 +26,6 @@ const createVaccinationStaffController = async (
       address,
     } = req.body;
 
-    // Check if the vaccination staff already exists
     const staffExistQuery = `
       SELECT * FROM Users WHERE name = $1 AND user_type = $2
     `;
@@ -41,20 +40,27 @@ const createVaccinationStaffController = async (
         .status(409)
         .json({ error: "Vaccination staff already exists" });
     }
-    // hash passwords
-    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert new user data into the Users table
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const username = `${name.replace(/\s+/g, "").toLowerCase()}`;
+
+    await client.query("BEGIN"); // Begin transaction
+
     const newUserQuery = `
-      INSERT INTO Users (name, gender, address, user_type)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO Users (name, gender, address, user_type, username)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING id
     `;
-    const newUserValues = [name, gender, address, user_type]; // Assuming gender and address are nullable
+    const newUserValues = [name, gender, address, user_type, username];
     const newUserResult = await client.query(newUserQuery, newUserValues);
     const newUserId = newUserResult.rows[0].id;
 
-    // Insert new vaccination staff data into the VaccinationStaff table
+    const updatedUsername = `${username}${newUserId}`;
+    const updateUserQuery = `
+      UPDATE Users SET username = $1 WHERE id = $2
+    `;
+    await client.query(updateUserQuery, [updatedUsername, newUserId]);
+
     const staffQuery = `
       INSERT INTO VaccinationStaff (user_id, position, hire_date, phone_number, password)
       VALUES ($1, $2, $3, $4, $5)
@@ -68,32 +74,37 @@ const createVaccinationStaffController = async (
       hashedPassword,
     ];
     const { rows } = await client.query(staffQuery, staffValues);
-    // VaccinationStaff;
+
+    await client.query("COMMIT"); // Commit transaction
+
     const token = jwt.sign(
       { userId: newUserId, name, role: user_type },
       JWT_SECRET,
       { expiresIn: "9h" }
     );
-res.cookie("token", token, {
-  httpOnly: true,
-  sameSite: "strict",
 
-  // secure: "production",
-  maxAge: 24 * 60 * 60 * 1000,
-});
-// Send success response with created vaccination staff member data
-res
-  .status(201)
-  .json({ success: true, data: rows[0], message: "creation successful" });
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        ...rows[0],
+        username: updatedUsername,
+      },
+      message: "Creation successful",
+    });
   } catch (error) {
-    // Send error response if an error occurs
+    await client.query("ROLLBACK"); // Rollback transaction in case of error
     console.error("Error creating vaccination staff:", error);
     res.status(500).json({
       success: false,
       error: "An error occurred while creating vaccination staff",
     });
   } finally {
-    // Release the client back to the pool
     client.release();
   }
 };

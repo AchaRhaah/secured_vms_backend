@@ -34,6 +34,7 @@ const deductVaccineInventoryController = (vaccineId) => __awaiter(void 0, void 0
             return { error: "Vaccine not found." };
         }
         const currentQuantity = quantityResult.rows[0].quantity;
+        console.log("current quantity:", currentQuantity);
         if (currentQuantity < 1) {
             return { error: "Vaccine is out of stock." };
         }

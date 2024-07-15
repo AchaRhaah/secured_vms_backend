@@ -25,7 +25,7 @@ export const deductVaccineInventoryController = async (vaccineId: number) => {
     }
 
     const currentQuantity = quantityResult.rows[0].quantity;
-
+console.log("current quantity:", currentQuantity);
     if (currentQuantity < 1) {
       return { error: "Vaccine is out of stock." };
     }

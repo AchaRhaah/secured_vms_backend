@@ -3,11 +3,13 @@ CREATE TYPE USER_TYPE AS ENUM('departmentManager', 'VaccinationStaff', 'Guardian
 CREATE TYPE GENDER_TYPE AS ENUM('Male', 'Female');
 
 CREATE TABLE Users (
-    id SERIAL PRIMARY KEY ,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    username VARCHAR(255) UNIQUE NOT NULL,
     gender GENDER_TYPE,
     address VARCHAR(255),
     user_type USER_TYPE NOT NULL
+    
 );
 
 CREATE TABLE VaccinationStaff (
@@ -27,7 +29,7 @@ CREATE TABLE Guardians (
     name VARCHAR(255) NOT NULL,
     phone_number VARCHAR(20) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    address VARCHAR(255) NOT NULL,
+    address VARCHAR(255) NOT NULL
 );
 
 
@@ -52,7 +54,7 @@ CREATE TABLE Vaccines (
     name VARCHAR(255) NOT NULL,
     disease TEXT,
     eligible_age DECIMAL(5, 2) NOT NULL, 
-    eligible_age_words VARCHAR(255) NOT NULL, 
+    eligible_age_words VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE VaccinationRecords (
@@ -131,15 +133,16 @@ CREATE TABLE TokenBlacklist (
 
 
 ALTER TABLE DailyVaccineUsage
-ADD CONSTRAINT unique_vaccine_date UNIQUE (vaccine_id, date)
+ADD CONSTRAINT unique_vaccine_date UNIQUE (vaccine_id, date);
 
 
 ALTER TABLE DailyVaccineUsage
-ADD COLUMN balance NUMBER 
+ADD COLUMN balance INT; 
 
 
 ALTER TABLE VaccineInventory
-ADD COLUMN batch_number Date 
+ADD COLUMN batch_number Date; 
 
 ALTER TABLE VaccineInventory
 ADD CONSTRAINT unique_vaccine_id UNIQUE (vaccine_id);
+ALTER TABLE VaccinationRecords ADD COLUMN is_booster BOOLEAN DEFAULT FALSE;

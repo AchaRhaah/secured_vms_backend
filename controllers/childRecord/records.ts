@@ -21,8 +21,8 @@ interface Guardian {
   name: string;
   phone_number: string;
   address: string;
-  gender: string; // Add guardian gender
-  number_of_children: number; // Add number of children
+  gender: string;
+  number_of_children: number;
 }
 
 interface VaccineRecord {
