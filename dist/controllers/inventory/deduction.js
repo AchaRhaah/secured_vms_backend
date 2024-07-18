@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deductVaccineInventoryController = void 0;
 const db_1 = __importDefault(require("../../db"));
 const deductVaccineInventoryController = (vaccineId) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("Deduction!!!!!!!!!!!!!!!!!!!!");
     const checkQuantityQuery = `
     SELECT quantity
     FROM VaccineInventory

@@ -21,6 +21,7 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
     try {
         const { childId, vaccineId, isBooster = false, // New field for booster
          } = req.body;
+        console.log(req.body);
         const token = req.cookies.token;
         if (!token) {
             return res
@@ -119,6 +120,7 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
       WHERE child_id = $6 AND vaccine_id = $7
       RETURNING *;
     `;
+        console.log(dateAdministered, batchNumber, nextAppointment, administeredBy, isBooster, childId, vaccineId);
         const updateRecordResult = yield db_1.default.query(updateRecordQuery, [
             dateAdministered,
             batchNumber,
@@ -128,6 +130,8 @@ const updateVaccinationRecordController = (req, res) => __awaiter(void 0, void 0
             childId,
             vaccineId,
         ]);
+        // Log the result of the update query
+        console.log("Update Record Result:", updateRecordResult.rows);
         if (updateRecordResult.rows.length === 0) {
             return res
                 .status(500)

@@ -21,6 +21,7 @@ export const updateVaccinationRecordController = async (
       vaccineId,
       isBooster = false, // New field for booster
     } = req.body;
+    console.log(req.body);
     const token = req.cookies.token;
     if (!token) {
       return res
@@ -59,6 +60,7 @@ export const updateVaccinationRecordController = async (
     // Check if the administered_by ID exists in the VaccinationStaff table
     const staffQuery = `SELECT id FROM VaccinationStaff WHERE id = $1`;
     const staffResult = await db.query(staffQuery, [administeredBy]);
+
     if (staffResult.rows.length === 0) {
       return res.status(400).json({ error: "Invalid administered_by ID." });
     }
@@ -137,6 +139,16 @@ export const updateVaccinationRecordController = async (
       WHERE child_id = $6 AND vaccine_id = $7
       RETURNING *;
     `;
+    console.log(
+      dateAdministered,
+      batchNumber,
+      nextAppointment,
+      administeredBy,
+      isBooster,
+      childId,
+      vaccineId
+    );
+
     const updateRecordResult = await db.query(updateRecordQuery, [
       dateAdministered,
       batchNumber,
@@ -146,6 +158,10 @@ export const updateVaccinationRecordController = async (
       childId,
       vaccineId,
     ]);
+
+    // Log the result of the update query
+    console.log("Update Record Result:", updateRecordResult.rows);
+
     if (updateRecordResult.rows.length === 0) {
       return res
         .status(500)

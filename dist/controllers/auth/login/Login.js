@@ -25,20 +25,22 @@ const loginController = (req, res) => __awaiter(void 0, void 0, void 0, function
         let userQuery;
         let userResult;
         if (user_type === "Guardian") {
+            console.log("here 1");
             // Fetch Guardian data from the database
             userQuery = `
-        SELECT Users.id, Users.username, Users.user_type, Guardians.password, Guardians.id
+        SELECT Users.id, Users.username, Users.name, Users.user_type, Guardians.password, Guardians.id
         FROM Users
         INNER JOIN Guardians ON Users.id = Guardians.user_id
         WHERE Users.username = $1 AND Users.user_type = 'Guardian'
       `;
             userResult = yield db_1.default.query(userQuery, [username]);
+            console.log("here 2");
         }
         else if (user_type === "VaccinationStaff" ||
             user_type === "departmentManager") {
             // Fetch Vaccination Staff data from the database
             userQuery = `
-        SELECT Users.id, Users.username, Users.user_type, VaccinationStaff.password
+        SELECT Users.id, Users.username, Users.name,Users.user_type, VaccinationStaff.password
         FROM Users
         INNER JOIN VaccinationStaff ON Users.id = VaccinationStaff.user_id
         WHERE Users.username = $1 AND Users.user_type = $2
@@ -84,7 +86,7 @@ const loginController = (req, res) => __awaiter(void 0, void 0, void 0, function
         res.json({
             message: "Login successful",
             role: user.user_type,
-            name: user.username,
+            name: user.name,
             userId: user.id,
             token: newToken,
         });

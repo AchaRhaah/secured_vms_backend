@@ -4,6 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+// import nodemailer from "nodemailer";
+// import google from "google-auth-library";
 const registrationRoutes_1 = __importDefault(require("./routes/auth/registrationRoutes"));
 const childrenRoutes_1 = __importDefault(require("./routes/childRoutes/childrenRoutes"));
 const incidentRoutes_1 = __importDefault(require("./routes/incident/incidentRoutes"));
@@ -40,6 +42,55 @@ app.use("/api/auth", loginRoutes_1.default);
 app.use("/api/auth", logoutRoutes_1.default);
 app.use("/api/report", reportRoutes_1.default);
 app.use("/api/staff", StaffRoutes_1.default);
+// const oAuth2Client = new google.auth.OAuth2(
+//   process.env.CLIENT_ID,
+//   process.env.CLIENT_SECRET,
+//   process.env.REDIRECT_URI
+// );
+// oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     type: "OAuth2",
+//     user: process.env.EMAIL,
+//     clientId: process.env.CLIENT_ID,
+//     clientSecret: process.env.CLIENT_SECRET,
+//     refreshToken: process.env.REFRESH_TOKEN,
+//   },
+// });
+// app.post("/send-email", async (req, res) => {
+//   const { to, subject, text, html } = req.body;
+//   try {
+//     const accessToken = await oAuth2Client.getAccessToken();
+//     const mailOptions = {
+//       from: `Atem Beatrice <${process.env.EMAIL}>`,
+//       to,
+//       subject,
+//       text,
+//       html,
+//       auth: {
+//         type: "OAuth2",
+//         user: process.env.EMAIL,
+//         clientId: process.env.CLIENT_ID,
+//         clientSecret: process.env.CLIENT_SECRET,
+//         refreshToken: process.env.REFRESH_TOKEN,
+//         accessToken: accessToken.token,
+//       },
+//     };
+//     transporter.sendMail(mailOptions, (error, info) => {
+//       if (error) {
+//         console.error(error);
+//         res.status(500).send("Error sending email");
+//       } else {
+//         console.log("Email sent: " + info.response);
+//         res.send("Email sent successfully");
+//       }
+//     });
+//   } catch (error) {
+//     console.error("Error generating access token", error);
+//     res.status(500).send("Error generating access token");
+//   }
+// });
 app.listen(process.env.PORT, () => {
     console.log(`running on port ${process.env.PORT}`);
 });

@@ -1,6 +1,7 @@
 import db from "../../db";
 
 export const deductVaccineInventoryController = async (vaccineId: number) => {
+  console.log("Deduction!!!!!!!!!!!!!!!!!!!!");
   const checkQuantityQuery = `
     SELECT quantity
     FROM VaccineInventory
